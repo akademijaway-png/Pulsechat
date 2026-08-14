@@ -1,0 +1,19 @@
+# Render.com blueprint — deploy PulseChat to a permanent public HTTPS URL.
+# See DEPLOY.md for the 10-minute step-by-step.
+services:
+  - type: web
+    name: pulsechat
+    runtime: node
+    plan: free
+    buildCommand: npm install --omit=dev
+    startCommand: node server/index.js
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: PORT
+        value: 10000

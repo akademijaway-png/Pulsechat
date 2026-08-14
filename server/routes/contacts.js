@@ -1,0 +1,156 @@
+'use strict';
+
+/**
+ * Contacts / friend requests:
+ *  - send request, accept, decline, remove contact
+ *  - list contacts and pending requests
+ *  - real-time events + push notifications on each transition
+ */
+const express = require('express');
+const { db, now } = require('../db');
+const { requireAuth } = require('../auth');
+const { validateBody, errors } = require('../middleware/validate');
+const { userSummary } = require('../helpers');
+const { emitToUser, isOnline } = require('../realtime/registry');
+const push = require('../realtime/pushService');
+
+const router = express.Router();
+
+function userRow(id) {
+  return db.prepare(`SELECT * FROM users WHERE id = ?`).get(id);
+}
+
+/** List accepted contacts (friends), with live presence info. */
+router.get('/contacts', requireAuth, (req, res) => {
+  const rows = db
+    .prepare(
+      `SELECT u.* FROM contacts c JOIN users u ON u.id = c.contact_id
+        WHERE c.user_id = ? AND c.status = 'accepted'
+        ORDER BY u.display_name COLLATE NOCASE ASC`
+    )
+    .all(req.user.id);
+  res.json({ contacts: rows.map((r) => userSummary(r, req.user.id)) });
+});
+
+/** Incoming + outgoing pending requests. */
+router.get('/contacts/requests', requireAuth, (req, res) => {
+  const me = req.user.id;
+  const incoming = db
+    .prepare(
+      `SELECT u.* FROM contacts c JOIN users u ON u.id = c.user_id
+        WHERE c.contact_id = ? AND c.status = 'requested'
+        ORDER BY c.created_at DESC`
+    )
+    .all(me)
+    .map((r) => userSummary(r, me));
+  const outgoing = db
+    .prepare(
+      `SELECT u.* FROM contacts c JOIN users u ON u.id = c.contact_id
+        WHERE c.user_id = ? AND c.status = 'requested'
+        ORDER BY c.created_at DESC`
+    )
+    .all(me)
+    .map((r) => userSummary(r, me));
+  res.json({ incoming, outgoing });
+});
+
+/** Send a friend request. */
+router.post(
+  '/contacts/requests',
+  requireAuth,
+  validateBody({ toUserId: { type: 'integer', required: true, label: 'User id' } }),
+  (req, res) => {
+    const me = req.user.id;
+    const target = req.valid.toUserId;
+    if (target === me) throw errors.badRequest('You cannot send a request to yourself.');
+
+    const other = userRow(target);
+    if (!other) throw errors.notFound('This user does not exist.');
+
+    const existing = db
+      .prepare(
+        `SELECT * FROM contacts WHERE (user_id = ? AND contact_id = ?) OR (user_id = ? AND contact_id = ?)`
+      )
+      .get(me, target, target, me);
+
+    if (existing) {
+      if (existing.status === 'accepted') throw errors.conflict('You are already connected with this user.');
+      if (existing.user_id === me) throw errors.conflict('You already sent a request to this user.');
+      throw errors.conflict('This user has already sent you a request. Accept it instead.');
+    }
+
+    db.prepare(`INSERT INTO contacts (user_id, contact_id, status, created_at) VALUES (?, ?, 'requested', ?)`).run(
+      me,
+      target,
+      now()
+    );
+
+    const fromSummary = userSummary(db.prepare(`SELECT * FROM users WHERE id = ?`).get(me), target);
+    emitToUser(target, 'contact:request', { from: fromSummary });
+    push.sendToUser(target, {
+      title: 'New friend request',
+      body: `${fromSummary.displayName} sent you a friend request.`,
+      tag: 'contact-request',
+      url: '/people',
+    });
+
+    res.status(201).json({ ok: true, from: userSummary(userRow(me), target) });
+  }
+);
+
+/** Accept an incoming request. */
+router.post('/contacts/requests/:fromUserId/accept', requireAuth, (req, res) => {
+  const me = req.user.id;
+  const fromId = Number(req.params.fromUserId);
+  const row = db
+    .prepare(`SELECT * FROM contacts WHERE user_id = ? AND contact_id = ? AND status = 'requested'`)
+    .get(fromId, me);
+  if (!row) throw errors.notFound('No pending request from this user.');
+
+  db.prepare(`UPDATE contacts SET status = 'accepted', responded_at = ? WHERE id = ?`).run(now(), row.id);
+
+  const mySummary = userSummary(userRow(me), fromId);
+  emitToUser(fromId, 'contact:accepted', { contact: mySummary });
+  push.sendToUser(fromId, {
+    title: 'Request accepted',
+    body: `${mySummary.displayName} accepted your friend request.`,
+    tag: 'contact-accepted',
+    url: '/chats',
+  });
+
+  res.json({ ok: true, contact: mySummary });
+});
+
+/** Decline an incoming request. */
+router.post('/contacts/requests/:fromUserId/decline', requireAuth, (req, res) => {
+  const me = req.user.id;
+  const fromId = Number(req.params.fromUserId);
+  const row = db
+    .prepare(`SELECT * FROM contacts WHERE user_id = ? AND contact_id = ? AND status = 'requested'`)
+    .get(fromId, me);
+  if (!row) throw errors.notFound('No pending request from this user.');
+
+  db.prepare(`DELETE FROM contacts WHERE id = ?`).run(row.id);
+  emitToUser(fromId, 'contact:declined', { fromUserId: me });
+  res.json({ ok: true });
+});
+
+/** Remove an existing contact (deletes both direction rows). */
+router.delete('/contacts/:userId', requireAuth, (req, res) => {
+  const me = req.user.id;
+  const otherId = Number(req.params.userId);
+  const row = db
+    .prepare(
+      `SELECT * FROM contacts
+        WHERE (user_id = ? AND contact_id = ?) OR (user_id = ? AND contact_id = ?)`
+    )
+    .get(me, otherId, otherId, me);
+  if (!row) throw errors.notFound('This user is not in your contacts.');
+
+  db.prepare(`DELETE FROM contacts WHERE id = ?`).run(row.id);
+  emitToUser(otherId, 'contact:removed', { userId: me });
+  emitToUser(me, 'contact:removed', { userId: otherId });
+  res.json({ ok: true });
+});
+
+module.exports = router;
