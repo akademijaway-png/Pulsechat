@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- simple worm squiggle for the push-notification badge -->
+  <g fill="none" stroke="#ffffff" stroke-width="7" stroke-linecap="round">
+    <path d="M12 40c6-14 14-14 20 0s14 14 20 0"/>
+  </g>
+</svg>
