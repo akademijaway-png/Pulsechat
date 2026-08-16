@@ -142,6 +142,7 @@ img { display: block; max-width: 100%; }
   box-shadow: inset 0 0 0 1px var(--border);
 }
 .avatar-sm { width: 40px; height: 40px; font-size: 16px; }
+.avatar-xs { width: 28px; height: 28px; font-size: 12px; }
 .avatar-md { width: 52px; height: 52px; font-size: 20px; }
 .avatar-lg { width: 84px; height: 84px; font-size: 32px; }
 .avatar-xl { width: 110px; height: 110px; font-size: 42px; }
@@ -508,6 +509,54 @@ img { display: block; max-width: 100%; }
 .fp-actions .btn { flex: 1; min-width: 120px; }
 .btn-danger-ghost { background: var(--danger-soft); color: var(--danger); }
 .btn-danger-ghost:hover { background: rgba(239,68,68,.25); }
+
+/* ============================================================
+   NEWS FEED
+   ============================================================ */
+.feed { display: flex; flex-direction: column; gap: 14px; padding-bottom: 8px; }
+.feed-composer {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
+  padding: 12px;
+}
+.feed-input {
+  flex: 1; resize: none; border: none; outline: none; background: transparent;
+  font-size: 15px; line-height: 1.45; max-height: 120px;
+}
+.feed-input:focus { background: transparent; }
+.feed-preview { position: relative; margin-top: 10px; }
+.feed-preview img { max-height: 240px; border-radius: var(--radius); object-fit: cover; width: 100%; }
+.feed-preview .icon-btn { position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,.55); color: #fff; }
+.feed-composer-actions { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+.feed-composer-actions .spacer { flex: 1; }
+
+.feed-list { display: flex; flex-direction: column; gap: 12px; }
+.post-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
+  padding: 12px 14px;
+}
+.post-head { display: flex; align-items: center; gap: 10px; }
+.post-author { min-width: 0; }
+.post-name { font-weight: 700; font-size: 14.5px; color: var(--text); }
+.post-time { font-size: 12px; color: var(--text-faint); margin-top: 1px; }
+.post-body { font-size: 15px; line-height: 1.55; margin-top: 10px; white-space: pre-wrap; word-wrap: break-word; }
+.post-image { margin-top: 10px; }
+.post-image img { width: 100%; max-height: 360px; object-fit: cover; border-radius: var(--radius); cursor: zoom-in; }
+.post-actions { display: flex; gap: 6px; margin-top: 12px; border-top: 1px solid var(--border); padding-top: 8px; }
+.post-action {
+  display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px;
+  border-radius: 999px; color: var(--text-dim); font-size: 13.5px; font-weight: 600;
+  transition: background .15s, color .15s;
+}
+.post-action svg { width: 17px; height: 17px; }
+.post-action:hover { background: var(--surface-2); color: var(--text); }
+.post-action.liked { color: #ff2d55; }
+.post-action.liked svg { fill: #ff2d55; }
+
+.post-comments { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+.comment { display: flex; gap: 8px; align-items: flex-start; }
+.comment-bubble { background: var(--surface-2); border-radius: 14px; padding: 7px 11px; font-size: 13.5px; line-height: 1.45; }
+.comment-name { font-weight: 700; }
+.comment-input { font-size: 13.5px; padding: 9px 13px; }
 
 /* ============================================================
    CALLS

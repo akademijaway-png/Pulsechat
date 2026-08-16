@@ -70,6 +70,13 @@ function emitToUserExcept(userId, exceptSocketId, event, payload) {
   return n;
 }
 
+/** Emit to every connected socket. */
+function emitToAll(event, payload) {
+  if (!io) return 0;
+  io.emit(event, payload);
+  return 1;
+}
+
 function userExists(userId) {
   return !!db.prepare(`SELECT id FROM users WHERE id = ?`).get(userId);
 }
@@ -83,6 +90,7 @@ module.exports = {
   socketsOf,
   emitToUser,
   emitToUserExcept,
+  emitToAll,
   userExists,
   now,
 };

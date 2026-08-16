@@ -14,11 +14,13 @@ import * as chatsView from './views/chats.js';
 import * as peopleView from './views/people.js';
 import * as callsView from './views/calls.js';
 import * as profileView from './views/profile.js';
+import * as feedView from './views/feed.js';
 import * as chatView from './views/chat.js';
 import * as rtc from './rtc.js';
 import { notify } from './notifications.js';
 
 const TABS = [
+  { id: 'feed', label: 'Feed', icon: 'feed' },
   { id: 'chats', label: 'Chats', icon: 'chats' },
   { id: 'people', label: 'People', icon: 'people' },
   { id: 'calls', label: 'Calls', icon: 'calls' },
@@ -263,7 +265,10 @@ function route() {
 function renderTab(view) {
   const host = document.getElementById('tabContent');
   if (!host) return;
-  if (view === 'chats') {
+  if (view === 'feed') {
+    feedView.render(host);
+    feedView.refresh();
+  } else if (view === 'chats') {
     chatsView.render(host);
     chatsView.refresh();
   } else if (view === 'people') {
@@ -314,6 +319,10 @@ function wireSocket() {
   });
 
   socket.on('socket:error', () => updateConn());
+
+  socket.on('feed:new', (p) => {
+    if (state.view === 'feed') feedView.addPostLive(p.post);
+  });
 
   socket.on('presence', (p) => {
     trackPresence(p);

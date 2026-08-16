@@ -151,6 +151,7 @@ img { display: block; max-width: 100%; }
   box-shadow: inset 0 0 0 1px var(--border);
 }
 .avatar-sm { width: 40px; height: 40px; font-size: 16px; }
+.avatar-xs { width: 28px; height: 28px; font-size: 12px; }
 .avatar-md { width: 52px; height: 52px; font-size: 20px; }
 .avatar-lg { width: 84px; height: 84px; font-size: 32px; }
 .avatar-xl { width: 110px; height: 110px; font-size: 42px; }
@@ -517,6 +518,54 @@ img { display: block; max-width: 100%; }
 .fp-actions .btn { flex: 1; min-width: 120px; }
 .btn-danger-ghost { background: var(--danger-soft); color: var(--danger); }
 .btn-danger-ghost:hover { background: rgba(239,68,68,.25); }
+
+/* ============================================================
+   NEWS FEED
+   ============================================================ */
+.feed { display: flex; flex-direction: column; gap: 14px; padding-bottom: 8px; }
+.feed-composer {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
+  padding: 12px;
+}
+.feed-input {
+  flex: 1; resize: none; border: none; outline: none; background: transparent;
+  font-size: 15px; line-height: 1.45; max-height: 120px;
+}
+.feed-input:focus { background: transparent; }
+.feed-preview { position: relative; margin-top: 10px; }
+.feed-preview img { max-height: 240px; border-radius: var(--radius); object-fit: cover; width: 100%; }
+.feed-preview .icon-btn { position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,.55); color: #fff; }
+.feed-composer-actions { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+.feed-composer-actions .spacer { flex: 1; }
+
+.feed-list { display: flex; flex-direction: column; gap: 12px; }
+.post-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
+  padding: 12px 14px;
+}
+.post-head { display: flex; align-items: center; gap: 10px; }
+.post-author { min-width: 0; }
+.post-name { font-weight: 700; font-size: 14.5px; color: var(--text); }
+.post-time { font-size: 12px; color: var(--text-faint); margin-top: 1px; }
+.post-body { font-size: 15px; line-height: 1.55; margin-top: 10px; white-space: pre-wrap; word-wrap: break-word; }
+.post-image { margin-top: 10px; }
+.post-image img { width: 100%; max-height: 360px; object-fit: cover; border-radius: var(--radius); cursor: zoom-in; }
+.post-actions { display: flex; gap: 6px; margin-top: 12px; border-top: 1px solid var(--border); padding-top: 8px; }
+.post-action {
+  display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px;
+  border-radius: 999px; color: var(--text-dim); font-size: 13.5px; font-weight: 600;
+  transition: background .15s, color .15s;
+}
+.post-action svg { width: 17px; height: 17px; }
+.post-action:hover { background: var(--surface-2); color: var(--text); }
+.post-action.liked { color: #ff2d55; }
+.post-action.liked svg { fill: #ff2d55; }
+
+.post-comments { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+.comment { display: flex; gap: 8px; align-items: flex-start; }
+.comment-bubble { background: var(--surface-2); border-radius: 14px; padding: 7px 11px; font-size: 13.5px; line-height: 1.45; }
+.comment-name { font-weight: 700; }
+.comment-input { font-size: 13.5px; padding: 9px 13px; }
 
 /* ============================================================
    CALLS
@@ -5750,13 +5799,6 @@ img { display: block; max-width: 100%; }
       throw err = [e], e;
     }
   };
-  var __commonJS = (cb, mod) => function __require() {
-    try {
-      return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
-    } catch (e) {
-      throw mod = 0, e;
-    }
-  };
   var __export = (target, all) => {
     for (var name in all)
       __defProp(target, name, { get: all[name], enumerable: true });
@@ -5808,11 +5850,11 @@ img { display: block; max-width: 100%; }
   function hasSession() {
     return !!(accessToken && refreshToken);
   }
-  function setSession(access, refresh4) {
+  function setSession(access, refresh5) {
     accessToken = access;
-    refreshToken = refresh4;
+    refreshToken = refresh5;
     sset(TOKEN_KEY, access);
-    sset(REFRESH_KEY, refresh4);
+    sset(REFRESH_KEY, refresh5);
   }
   function clearSession() {
     accessToken = null;
@@ -6138,6 +6180,9 @@ img { display: block; max-width: 100%; }
         close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>',
         retry: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>',
         zap: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
+        feed: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v6H4zM4 14h10v6H4z"/><path d="M18 14v6M21 14v6" opacity=".55"/></svg>',
+        heart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>',
+        comment: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>',
         chevron: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>'
       };
     }
@@ -6314,416 +6359,6 @@ img { display: block; max-width: 100%; }
       init_api();
       init_icons();
       audioCtx = null;
-    }
-  });
-
-  // public/js/views/auth.js
-  function renderAuth(container5, opts = {}) {
-    mode = opts.mode || "login";
-    resetToken = opts.token || null;
-    container5.replaceChildren(buildCard());
-  }
-  function buildCard() {
-    const card = el("div", { class: "auth-card" });
-    card.append(
-      el("div", { class: "auth-brand" }, [
-        el("img", { src: "data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%0A%20%20%3Cdefs%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22pcg%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23ffb02e%22%2F%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23ff4d6d%22%2F%3E%0A%20%20%20%20%3C%2FlinearGradient%3E%0A%20%20%3C%2Fdefs%3E%0A%20%20%3C!--%20speech%20bubble%20with%20tail%20--%3E%0A%20%20%3Cpath%20d%3D%22M32%205C17.8%205%206.3%2015.2%206.3%2027.8c0%207.8%204.1%2014.5%2010.3%2018.9L13.6%2059l13-5.4c1.8.3%203.6.5%205.4.5%2014.2%200%2025.7-10.2%2025.7-22.8S46.2%205%2032%205z%22%20fill%3D%22url(%23pcg)%22%2F%3E%0A%20%20%3C!--%20friendly%20worm%20(segmented%20curve)%20--%3E%0A%20%20%3Cg%20fill%3D%22%23ffffff%22%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2243%22%20cy%3D%2227%22%20r%3D%225.6%22%2F%3E%20%20%20%20%20%20%3C!--%20head%20--%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2236%22%20cy%3D%2233%22%20r%3D%225.0%22%2F%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2229%22%20cy%3D%2238%22%20r%3D%224.4%22%2F%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2223%22%20cy%3D%2242%22%20r%3D%223.8%22%2F%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2217%22%20cy%3D%2245%22%20r%3D%223.2%22%2F%3E%20%20%20%20%20%20%3C!--%20tail%20--%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2245%22%20cy%3D%2225%22%20r%3D%221.5%22%20fill%3D%22%23ff2d55%22%2F%3E%20%20%20%3C!--%20eye%20--%3E%0A%20%20%3C%2Fg%3E%0A%3C%2Fsvg%3E%0A", class: "logo", alt: "" }),
-        el("div", {}, [
-          el("h1", { text: "PulseChat Messenger" }),
-          el("p", { text: "Fast, secure messaging with a pulse." })
-        ])
-      ])
-    );
-    const body = el("div", { id: "auth-body" });
-    renderBody(body);
-    card.append(body);
-    return card;
-  }
-  function setMode(next, token) {
-    mode = next;
-    resetToken = token || null;
-    const body = document.getElementById("auth-body");
-    if (body) renderBody(body);
-  }
-  function renderBody(body) {
-    body.replaceChildren();
-    if (mode === "forgot") return renderForgot(body);
-    if (mode === "reset") return renderReset(body);
-    renderLoginRegister(body);
-  }
-  function renderLoginRegister(body) {
-    const isLogin = mode === "login";
-    body.append(
-      el("div", { class: "auth-tabs" }, [
-        el("button", { class: isLogin ? "active" : "", text: "Log in", onclick: () => setMode("login") }),
-        el("button", { class: !isLogin ? "active" : "", text: "Create account", onclick: () => setMode("register") })
-      ])
-    );
-    const errorBox = el("div", { id: "auth-error", class: "form-error hidden" });
-    body.append(errorBox);
-    if (isLogin || mode === "register") {
-      body.append(googleSection());
-    }
-    const form = el("form", { id: "auth-form", onsubmit: (e) => e.preventDefault() });
-    form.append(
-      el("div", { class: "field" }, [
-        el("label", { text: "Email" }),
-        el("input", { class: "input", type: "email", id: "auth-email", placeholder: "you@example.com", autocomplete: "email", required: true })
-      ])
-    );
-    if (!isLogin) {
-      form.append(
-        el("div", { class: "field" }, [
-          el("label", { text: "Display name" }),
-          el("input", { class: "input", type: "text", id: "auth-name", placeholder: "How friends will see you", maxlength: "60", required: true })
-        ]),
-        el("div", { class: "field" }, [
-          el("label", { text: "Password" }),
-          el("input", { class: "input", type: "password", id: "auth-pass", placeholder: "At least 8 chars, with letters & numbers", autocomplete: "new-password", required: true })
-        ])
-      );
-    } else {
-      form.append(
-        el("div", { class: "field" }, [
-          el("label", { text: "Password" }),
-          el("input", { class: "input", type: "password", id: "auth-pass", placeholder: "Your password", autocomplete: "current-password", required: true })
-        ])
-      );
-    }
-    form.append(
-      el("button", { class: "btn btn-primary btn-block btn-lg", type: "submit", id: "auth-submit", text: isLogin ? "Log in" : "Create account" })
-    );
-    form.addEventListener("submit", submitAuth);
-    body.append(form);
-    body.append(
-      el("div", { class: "auth-alt" }, isLogin ? [
-        el("span", { text: "Forgot your password? " }),
-        el("a", { text: "Reset it", onclick: () => setMode("forgot") })
-      ] : [
-        el("span", { text: "Already have an account? " }),
-        el("a", { text: "Log in", onclick: () => setMode("login") })
-      ])
-    );
-    initGoogle();
-    initDevReset();
-  }
-  async function initDevReset() {
-    const meta = await loadMeta();
-    if (!meta.allowReset) return;
-    const anchor = document.querySelector(".auth-alt");
-    if (!anchor) return;
-    const btn = el("button", {
-      class: "dev-reset",
-      html: icon("retry") + "<span>Testing? Start fresh \u2014 wipe all data</span>",
-      onclick: async () => {
-        if (!window.confirm("Delete ALL accounts, messages and media? This cannot be undone.")) return;
-        try {
-          const res = await api.post("/dev/reset");
-          toast(res.message || "App reset \u2014 you can now create a new account", "success", 4e3);
-          setTimeout(() => location.reload(), 900);
-        } catch (err) {
-          toast(err.message, "error");
-        }
-      }
-    });
-    anchor.after(btn);
-  }
-  function googleSection() {
-    return el("div", { id: "google-section", class: "hidden" }, [
-      el("div", { id: "google-btn" }),
-      el("div", { class: "divider-or" }, [el("span", { text: "or" })])
-    ]);
-  }
-  function loadGsiScript() {
-    return new Promise((resolve, reject) => {
-      if (window.google && window.google.accounts) return resolve();
-      const s = document.createElement("script");
-      s.src = "https://accounts.google.com/gsi/client";
-      s.async = true;
-      s.onload = resolve;
-      s.onerror = () => reject(new Error("gsi-load-failed"));
-      document.head.appendChild(s);
-    });
-  }
-  async function loadMeta() {
-    if (metaCache) return metaCache;
-    try {
-      metaCache = await api.get("/auth/meta");
-    } catch {
-      metaCache = { google: { enabled: false }, demoAccounts: [] };
-    }
-    return metaCache;
-  }
-  async function initGoogle() {
-    const meta = await loadMeta();
-    const section = document.getElementById("google-section");
-    if (!section) return;
-    if (!meta.google || !meta.google.enabled) return;
-    try {
-      await loadGsiScript();
-      if (!gsiInitialized) {
-        window.google.accounts.id.initialize({
-          client_id: meta.google.clientId,
-          callback: handleGoogleCredential,
-          auto_select: false,
-          cancel_on_tap_outside: true
-        });
-        gsiInitialized = true;
-      }
-      window.google.accounts.id.renderButton(document.getElementById("google-btn"), {
-        theme: "outline",
-        size: "large",
-        shape: "pill",
-        text: "continue_with",
-        width: 300,
-        logo_alignment: "left"
-      });
-      section.classList.remove("hidden");
-    } catch {
-      section.classList.add("hidden");
-    }
-  }
-  async function handleGoogleCredential(response) {
-    const errorBox = document.getElementById("auth-error");
-    const showError = (msg) => {
-      if (errorBox) {
-        errorBox.textContent = msg;
-        errorBox.classList.remove("hidden");
-      }
-    };
-    try {
-      const data = await api.post("/auth/google", { credential: response.credential });
-      setSession(data.accessToken, data.refreshToken);
-      toast(`Welcome${data.user.displayName ? ", " + data.user.displayName : ""}! \u{1F389}`, "success");
-      await afterAuthed();
-    } catch (err) {
-      showError(err.message);
-    }
-  }
-  async function afterAuthed() {
-    window.dispatchEvent(new Event("pc:authed"));
-    location.hash = "#/chats";
-    await new Promise((r) => setTimeout(r, 2500));
-    if (!document.getElementById("shell") && hasSession()) {
-      toast("Logged in, but the app couldn't finish loading here. Try opening http://localhost:3000 directly.", "error", 6e3);
-    }
-  }
-  async function submitAuth(e) {
-    e.preventDefault();
-    const form = e.target;
-    const email = form.querySelector("#auth-email").value.trim();
-    const pass = form.querySelector("#auth-pass").value;
-    const errorBox = document.getElementById("auth-error");
-    const btn = form.querySelector("#auth-submit");
-    const showError = (msg) => {
-      errorBox.textContent = msg;
-      errorBox.classList.remove("hidden");
-    };
-    errorBox.classList.add("hidden");
-    btn.disabled = true;
-    const original = btn.textContent;
-    btn.innerHTML = '<span class="spinner" style="width:18px;height:18px"></span>';
-    try {
-      if (mode === "login") {
-        const data = await api.post("/auth/login", { email, password: pass });
-        setSession(data.accessToken, data.refreshToken);
-        await afterAuthed();
-      } else {
-        const name = form.querySelector("#auth-name").value.trim();
-        if (name.length < 2) {
-          showError("Display name must be at least 2 characters.");
-          btn.disabled = false;
-          btn.textContent = original;
-          return;
-        }
-        const data = await api.post("/auth/register", { email, password: pass, displayName: name });
-        setSession(data.accessToken, data.refreshToken);
-        toast(`Welcome to PulseChat Messenger, ${data.user.displayName}! \u{1F389}`, "success");
-        await afterAuthed();
-      }
-    } catch (err) {
-      const msg = err && err.status ? err.message : "Can't reach the server. Check your internet connection and try again.";
-      showError(msg);
-      btn.disabled = false;
-      btn.textContent = original;
-    }
-  }
-  function renderForgot(body) {
-    body.append(
-      el("h3", { style: "font-size:18px;margin-bottom:8px", text: "Reset your password" }),
-      el("p", { style: "font-size:13.5px;color:var(--text-dim);margin-bottom:16px;line-height:1.5", text: "Enter your account email and we'll send you a reset link." })
-    );
-    const box = el("div", { id: "auth-error", class: "form-error hidden" });
-    const okBox = el("div", { id: "auth-ok", class: "form-ok hidden" });
-    body.append(box, okBox);
-    const form = el("form", { onsubmit: (e) => e.preventDefault() }, [
-      el("div", { class: "field" }, [
-        el("label", { text: "Email" }),
-        el("input", { class: "input", type: "email", id: "forgot-email", placeholder: "you@example.com", required: true })
-      ]),
-      el("button", { class: "btn btn-primary btn-block", type: "submit", id: "forgot-submit", text: "Send reset link" })
-    ]);
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const btn = form.querySelector("#forgot-submit");
-      btn.disabled = true;
-      btn.textContent = "Sending\u2026";
-      try {
-        const res = await api.post("/auth/reset/request", { email: form.querySelector("#forgot-email").value.trim() });
-        okBox.textContent = res.message || "If an account exists, a reset link has been sent.";
-        okBox.classList.remove("hidden");
-        if (res.devResetUrl) {
-          const link = el("div", { style: "margin-top:8px;font-size:12.5px" }, [
-            el("span", { text: "Dev link: " }),
-            el("a", { href: res.devResetUrl, style: "color:var(--accent);word-break:break-all", text: res.devResetUrl })
-          ]);
-          okBox.append(link);
-        }
-      } catch (err) {
-        box.textContent = err.message;
-        box.classList.remove("hidden");
-      } finally {
-        btn.disabled = false;
-        btn.textContent = "Send reset link";
-      }
-    });
-    body.append(form);
-    body.append(el("div", { class: "auth-alt" }, [el("a", { text: "\u2190 Back to login", onclick: () => setMode("login") })]));
-  }
-  function renderReset(body) {
-    body.append(
-      el("h3", { style: "font-size:18px;margin-bottom:8px", text: "Choose a new password" }),
-      el("p", { style: "font-size:13.5px;color:var(--text-dim);margin-bottom:16px", text: "Min 8 characters, with at least one letter and one number." })
-    );
-    const box = el("div", { id: "auth-error", class: "form-error hidden" });
-    const okBox = el("div", { id: "auth-ok", class: "form-ok hidden" });
-    body.append(box, okBox);
-    const form = el("form", { onsubmit: (e) => e.preventDefault() }, [
-      el("div", { class: "field" }, [
-        el("label", { text: "New password" }),
-        el("input", { class: "input", type: "password", id: "reset-pass", placeholder: "New password", required: true })
-      ]),
-      el("button", { class: "btn btn-primary btn-block", type: "submit", text: "Reset password" })
-    ]);
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const btn = form.querySelector("button[type=submit]");
-      btn.disabled = true;
-      btn.textContent = "Saving\u2026";
-      try {
-        const res = await api.post("/auth/reset/confirm", {
-          token: resetToken,
-          newPassword: form.querySelector("#reset-pass").value
-        });
-        okBox.textContent = res.message || "Password updated.";
-        okBox.classList.remove("hidden");
-        body.querySelector("#auth-ok").append(
-          el("div", { style: "margin-top:10px" }, [
-            el("a", { class: "btn btn-primary btn-sm", text: "Go to log in", onclick: () => setMode("login") })
-          ])
-        );
-      } catch (err) {
-        box.textContent = err.message;
-        box.classList.remove("hidden");
-      } finally {
-        btn.disabled = false;
-        btn.textContent = "Reset password";
-      }
-    });
-    body.append(form);
-  }
-  var mode, resetToken, metaCache, gsiInitialized;
-  var init_auth = __esm({
-    "public/js/views/auth.js"() {
-      "use strict";
-      init_api();
-      init_ui();
-      init_icons();
-      mode = "login";
-      resetToken = null;
-      metaCache = null;
-      gsiInitialized = false;
-    }
-  });
-
-  // public/js/views/chats.js
-  function animatedWorm() {
-    return el("div", { class: "worm-stage" }, [
-      el("div", { class: "worm-rings" }, [el("span", { class: "worm-ring" }), el("span", { class: "worm-ring" }), el("span", { class: "worm-ring" })]),
-      el("img", { class: "worm-logo", src: "data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%0A%20%20%3Cdefs%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22pcg%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23ffb02e%22%2F%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23ff4d6d%22%2F%3E%0A%20%20%20%20%3C%2FlinearGradient%3E%0A%20%20%3C%2Fdefs%3E%0A%20%20%3C!--%20speech%20bubble%20with%20tail%20--%3E%0A%20%20%3Cpath%20d%3D%22M32%205C17.8%205%206.3%2015.2%206.3%2027.8c0%207.8%204.1%2014.5%2010.3%2018.9L13.6%2059l13-5.4c1.8.3%203.6.5%205.4.5%2014.2%200%2025.7-10.2%2025.7-22.8S46.2%205%2032%205z%22%20fill%3D%22url(%23pcg)%22%2F%3E%0A%20%20%3C!--%20friendly%20worm%20(segmented%20curve)%20--%3E%0A%20%20%3Cg%20fill%3D%22%23ffffff%22%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2243%22%20cy%3D%2227%22%20r%3D%225.6%22%2F%3E%20%20%20%20%20%20%3C!--%20head%20--%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2236%22%20cy%3D%2233%22%20r%3D%225.0%22%2F%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2229%22%20cy%3D%2238%22%20r%3D%224.4%22%2F%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2223%22%20cy%3D%2242%22%20r%3D%223.8%22%2F%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2217%22%20cy%3D%2245%22%20r%3D%223.2%22%2F%3E%20%20%20%20%20%20%3C!--%20tail%20--%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2245%22%20cy%3D%2225%22%20r%3D%221.5%22%20fill%3D%22%23ff2d55%22%2F%3E%20%20%20%3C!--%20eye%20--%3E%0A%20%20%3C%2Fg%3E%0A%3C%2Fsvg%3E%0A", alt: "PulseChat" }),
-      el("div", {
-        class: "worm-ekg",
-        html: '<svg viewBox="0 0 240 48" width="190" height="34" aria-hidden="true"><path class="worm-ekg-path" d="M0 24 H64 L74 24 L80 10 L88 38 L94 24 H126 L134 24 L140 12 L148 36 L154 24 H240"/></svg>'
-      })
-    ]);
-  }
-  function render(host) {
-    container = host;
-    draw();
-  }
-  async function refresh() {
-    try {
-      const d = await api.get("/conversations");
-      state_default.conversations = d.conversations;
-      computeUnread();
-      draw();
-    } catch (err) {
-      toast(err.message, "error");
-    }
-  }
-  function draw() {
-    if (container && container.isConnected) container.replaceChildren(build());
-  }
-  function build() {
-    if (!state_default.conversations.length) {
-      return el("div", { class: "empty-state" }, [
-        animatedWorm(),
-        el("h3", { text: "No conversations yet" })
-      ]);
-    }
-    return el("div", { class: "conv-list fade-swap" }, state_default.conversations.map(itemHtml));
-  }
-  function itemHtml(conv2) {
-    const user = conv2.user;
-    const p = state_default.presence[user.id];
-    const online = p ? p.online : user.online;
-    const last = conv2.lastMessage;
-    const mine = last && last.senderId === (state_default.me && state_default.me.id);
-    let preview = "";
-    let time = "";
-    if (last) {
-      const text = last.kind === "image" ? "\u{1F4F7} Photo" : last.body;
-      const tick = mine && !last.temp ? last.readAt ? '<span class="tick read">' + icon("doubleCheck") + "</span>" : last.deliveredAt ? '<span class="tick delivered">' + icon("doubleCheck") + "</span>" : '<span class="tick sent">' + icon("check") + "</span>" : "";
-      preview = tick + esc(text);
-      time = formatTime(last.createdAt);
-    } else {
-      preview = "Start chatting";
-    }
-    const muted = conv2.unreadCount === 0;
-    return el("div", {
-      class: "conv-item" + (muted ? " conv-muted" : ""),
-      onclick: () => location.hash = "#/chat/" + conv2.id
-    }, [
-      el("span", { class: "avatar-wrap", html: avatarHtml(user, "md") + (online ? '<span class="dot dot-online"></span>' : "") }),
-      el("div", { class: "conv-mid" }, [
-        el("div", { class: "conv-name" }, [el("span", { text: user.displayName })]),
-        el("div", { class: "conv-preview", html: preview })
-      ]),
-      el("div", { class: "conv-right" }, [
-        el("span", { class: "conv-time", text: time }),
-        conv2.unreadCount > 0 ? el("span", { class: "badge", text: conv2.unreadCount > 99 ? "99+" : conv2.unreadCount }) : null
-      ])
-    ]);
-  }
-  var container;
-  var init_chats = __esm({
-    "public/js/views/chats.js"() {
-      "use strict";
-      init_state();
-      init_api();
-      init_ui();
-      init_icons();
-      container = null;
     }
   });
 
@@ -7244,7 +6879,420 @@ img { display: block; max-width: 100%; }
     }
   });
 
+  // public/js/app.js
+  init_api();
+  init_socket();
+  init_state();
+  init_ui();
+  init_icons();
+
+  // public/js/views/auth.js
+  init_api();
+  init_ui();
+  init_icons();
+  var mode = "login";
+  var resetToken = null;
+  var metaCache = null;
+  function renderAuth(container6, opts = {}) {
+    mode = opts.mode || "login";
+    resetToken = opts.token || null;
+    container6.replaceChildren(buildCard());
+  }
+  function buildCard() {
+    const card = el("div", { class: "auth-card" });
+    card.append(
+      el("div", { class: "auth-brand" }, [
+        el("img", { src: "data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%0A%20%20%3Cdefs%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22pcg%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23ffb02e%22%2F%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23ff4d6d%22%2F%3E%0A%20%20%20%20%3C%2FlinearGradient%3E%0A%20%20%3C%2Fdefs%3E%0A%20%20%3C!--%20speech%20bubble%20with%20tail%20--%3E%0A%20%20%3Cpath%20d%3D%22M32%205C17.8%205%206.3%2015.2%206.3%2027.8c0%207.8%204.1%2014.5%2010.3%2018.9L13.6%2059l13-5.4c1.8.3%203.6.5%205.4.5%2014.2%200%2025.7-10.2%2025.7-22.8S46.2%205%2032%205z%22%20fill%3D%22url(%23pcg)%22%2F%3E%0A%20%20%3C!--%20friendly%20worm%20(segmented%20curve)%20--%3E%0A%20%20%3Cg%20fill%3D%22%23ffffff%22%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2243%22%20cy%3D%2227%22%20r%3D%225.6%22%2F%3E%20%20%20%20%20%20%3C!--%20head%20--%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2236%22%20cy%3D%2233%22%20r%3D%225.0%22%2F%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2229%22%20cy%3D%2238%22%20r%3D%224.4%22%2F%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2223%22%20cy%3D%2242%22%20r%3D%223.8%22%2F%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2217%22%20cy%3D%2245%22%20r%3D%223.2%22%2F%3E%20%20%20%20%20%20%3C!--%20tail%20--%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2245%22%20cy%3D%2225%22%20r%3D%221.5%22%20fill%3D%22%23ff2d55%22%2F%3E%20%20%20%3C!--%20eye%20--%3E%0A%20%20%3C%2Fg%3E%0A%3C%2Fsvg%3E%0A", class: "logo", alt: "" }),
+        el("div", {}, [
+          el("h1", { text: "PulseChat Messenger" }),
+          el("p", { text: "Fast, secure messaging with a pulse." })
+        ])
+      ])
+    );
+    const body = el("div", { id: "auth-body" });
+    renderBody(body);
+    card.append(body);
+    return card;
+  }
+  function setMode(next, token) {
+    mode = next;
+    resetToken = token || null;
+    const body = document.getElementById("auth-body");
+    if (body) renderBody(body);
+  }
+  function renderBody(body) {
+    body.replaceChildren();
+    if (mode === "forgot") return renderForgot(body);
+    if (mode === "reset") return renderReset(body);
+    renderLoginRegister(body);
+  }
+  function renderLoginRegister(body) {
+    const isLogin = mode === "login";
+    body.append(
+      el("div", { class: "auth-tabs" }, [
+        el("button", { class: isLogin ? "active" : "", text: "Log in", onclick: () => setMode("login") }),
+        el("button", { class: !isLogin ? "active" : "", text: "Create account", onclick: () => setMode("register") })
+      ])
+    );
+    const errorBox = el("div", { id: "auth-error", class: "form-error hidden" });
+    body.append(errorBox);
+    if (isLogin || mode === "register") {
+      body.append(googleSection());
+    }
+    const form = el("form", { id: "auth-form", onsubmit: (e) => e.preventDefault() });
+    form.append(
+      el("div", { class: "field" }, [
+        el("label", { text: "Email" }),
+        el("input", { class: "input", type: "email", id: "auth-email", placeholder: "you@example.com", autocomplete: "email", required: true })
+      ])
+    );
+    if (!isLogin) {
+      form.append(
+        el("div", { class: "field" }, [
+          el("label", { text: "Display name" }),
+          el("input", { class: "input", type: "text", id: "auth-name", placeholder: "How friends will see you", maxlength: "60", required: true })
+        ]),
+        el("div", { class: "field" }, [
+          el("label", { text: "Password" }),
+          el("input", { class: "input", type: "password", id: "auth-pass", placeholder: "At least 8 chars, with letters & numbers", autocomplete: "new-password", required: true })
+        ])
+      );
+    } else {
+      form.append(
+        el("div", { class: "field" }, [
+          el("label", { text: "Password" }),
+          el("input", { class: "input", type: "password", id: "auth-pass", placeholder: "Your password", autocomplete: "current-password", required: true })
+        ])
+      );
+    }
+    form.append(
+      el("button", { class: "btn btn-primary btn-block btn-lg", type: "submit", id: "auth-submit", text: isLogin ? "Log in" : "Create account" })
+    );
+    form.addEventListener("submit", submitAuth);
+    body.append(form);
+    body.append(
+      el("div", { class: "auth-alt" }, isLogin ? [
+        el("span", { text: "Forgot your password? " }),
+        el("a", { text: "Reset it", onclick: () => setMode("forgot") })
+      ] : [
+        el("span", { text: "Already have an account? " }),
+        el("a", { text: "Log in", onclick: () => setMode("login") })
+      ])
+    );
+    initGoogle();
+    initDevReset();
+  }
+  async function initDevReset() {
+    const meta = await loadMeta();
+    if (!meta.allowReset) return;
+    const anchor = document.querySelector(".auth-alt");
+    if (!anchor) return;
+    const btn = el("button", {
+      class: "dev-reset",
+      html: icon("retry") + "<span>Testing? Start fresh \u2014 wipe all data</span>",
+      onclick: async () => {
+        if (!window.confirm("Delete ALL accounts, messages and media? This cannot be undone.")) return;
+        try {
+          const res = await api.post("/dev/reset");
+          toast(res.message || "App reset \u2014 you can now create a new account", "success", 4e3);
+          setTimeout(() => location.reload(), 900);
+        } catch (err) {
+          toast(err.message, "error");
+        }
+      }
+    });
+    anchor.after(btn);
+  }
+  function googleSection() {
+    return el("div", { id: "google-section", class: "hidden" }, [
+      el("div", { id: "google-btn" }),
+      el("div", { class: "divider-or" }, [el("span", { text: "or" })])
+    ]);
+  }
+  function loadGsiScript() {
+    return new Promise((resolve, reject) => {
+      if (window.google && window.google.accounts) return resolve();
+      const s = document.createElement("script");
+      s.src = "https://accounts.google.com/gsi/client";
+      s.async = true;
+      s.onload = resolve;
+      s.onerror = () => reject(new Error("gsi-load-failed"));
+      document.head.appendChild(s);
+    });
+  }
+  async function loadMeta() {
+    if (metaCache) return metaCache;
+    try {
+      metaCache = await api.get("/auth/meta");
+    } catch {
+      metaCache = { google: { enabled: false }, demoAccounts: [] };
+    }
+    return metaCache;
+  }
+  var gsiInitialized = false;
+  async function initGoogle() {
+    const meta = await loadMeta();
+    const section = document.getElementById("google-section");
+    if (!section) return;
+    if (!meta.google || !meta.google.enabled) return;
+    try {
+      await loadGsiScript();
+      if (!gsiInitialized) {
+        window.google.accounts.id.initialize({
+          client_id: meta.google.clientId,
+          callback: handleGoogleCredential,
+          auto_select: false,
+          cancel_on_tap_outside: true
+        });
+        gsiInitialized = true;
+      }
+      window.google.accounts.id.renderButton(document.getElementById("google-btn"), {
+        theme: "outline",
+        size: "large",
+        shape: "pill",
+        text: "continue_with",
+        width: 300,
+        logo_alignment: "left"
+      });
+      section.classList.remove("hidden");
+    } catch {
+      section.classList.add("hidden");
+    }
+  }
+  async function handleGoogleCredential(response) {
+    const errorBox = document.getElementById("auth-error");
+    const showError = (msg) => {
+      if (errorBox) {
+        errorBox.textContent = msg;
+        errorBox.classList.remove("hidden");
+      }
+    };
+    try {
+      const data = await api.post("/auth/google", { credential: response.credential });
+      setSession(data.accessToken, data.refreshToken);
+      toast(`Welcome${data.user.displayName ? ", " + data.user.displayName : ""}! \u{1F389}`, "success");
+      await afterAuthed();
+    } catch (err) {
+      showError(err.message);
+    }
+  }
+  async function afterAuthed() {
+    window.dispatchEvent(new Event("pc:authed"));
+    location.hash = "#/chats";
+    await new Promise((r) => setTimeout(r, 2500));
+    if (!document.getElementById("shell") && hasSession()) {
+      toast("Logged in, but the app couldn't finish loading here. Try opening http://localhost:3000 directly.", "error", 6e3);
+    }
+  }
+  async function submitAuth(e) {
+    e.preventDefault();
+    const form = e.target;
+    const email = form.querySelector("#auth-email").value.trim();
+    const pass = form.querySelector("#auth-pass").value;
+    const errorBox = document.getElementById("auth-error");
+    const btn = form.querySelector("#auth-submit");
+    const showError = (msg) => {
+      errorBox.textContent = msg;
+      errorBox.classList.remove("hidden");
+    };
+    errorBox.classList.add("hidden");
+    btn.disabled = true;
+    const original = btn.textContent;
+    btn.innerHTML = '<span class="spinner" style="width:18px;height:18px"></span>';
+    try {
+      if (mode === "login") {
+        const data = await api.post("/auth/login", { email, password: pass });
+        setSession(data.accessToken, data.refreshToken);
+        await afterAuthed();
+      } else {
+        const name = form.querySelector("#auth-name").value.trim();
+        if (name.length < 2) {
+          showError("Display name must be at least 2 characters.");
+          btn.disabled = false;
+          btn.textContent = original;
+          return;
+        }
+        const data = await api.post("/auth/register", { email, password: pass, displayName: name });
+        setSession(data.accessToken, data.refreshToken);
+        toast(`Welcome to PulseChat Messenger, ${data.user.displayName}! \u{1F389}`, "success");
+        await afterAuthed();
+      }
+    } catch (err) {
+      const msg = err && err.status ? err.message : "Can't reach the server. Check your internet connection and try again.";
+      showError(msg);
+      btn.disabled = false;
+      btn.textContent = original;
+    }
+  }
+  function renderForgot(body) {
+    body.append(
+      el("h3", { style: "font-size:18px;margin-bottom:8px", text: "Reset your password" }),
+      el("p", { style: "font-size:13.5px;color:var(--text-dim);margin-bottom:16px;line-height:1.5", text: "Enter your account email and we'll send you a reset link." })
+    );
+    const box = el("div", { id: "auth-error", class: "form-error hidden" });
+    const okBox = el("div", { id: "auth-ok", class: "form-ok hidden" });
+    body.append(box, okBox);
+    const form = el("form", { onsubmit: (e) => e.preventDefault() }, [
+      el("div", { class: "field" }, [
+        el("label", { text: "Email" }),
+        el("input", { class: "input", type: "email", id: "forgot-email", placeholder: "you@example.com", required: true })
+      ]),
+      el("button", { class: "btn btn-primary btn-block", type: "submit", id: "forgot-submit", text: "Send reset link" })
+    ]);
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const btn = form.querySelector("#forgot-submit");
+      btn.disabled = true;
+      btn.textContent = "Sending\u2026";
+      try {
+        const res = await api.post("/auth/reset/request", { email: form.querySelector("#forgot-email").value.trim() });
+        okBox.textContent = res.message || "If an account exists, a reset link has been sent.";
+        okBox.classList.remove("hidden");
+        if (res.devResetUrl) {
+          const link = el("div", { style: "margin-top:8px;font-size:12.5px" }, [
+            el("span", { text: "Dev link: " }),
+            el("a", { href: res.devResetUrl, style: "color:var(--accent);word-break:break-all", text: res.devResetUrl })
+          ]);
+          okBox.append(link);
+        }
+      } catch (err) {
+        box.textContent = err.message;
+        box.classList.remove("hidden");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Send reset link";
+      }
+    });
+    body.append(form);
+    body.append(el("div", { class: "auth-alt" }, [el("a", { text: "\u2190 Back to login", onclick: () => setMode("login") })]));
+  }
+  function renderReset(body) {
+    body.append(
+      el("h3", { style: "font-size:18px;margin-bottom:8px", text: "Choose a new password" }),
+      el("p", { style: "font-size:13.5px;color:var(--text-dim);margin-bottom:16px", text: "Min 8 characters, with at least one letter and one number." })
+    );
+    const box = el("div", { id: "auth-error", class: "form-error hidden" });
+    const okBox = el("div", { id: "auth-ok", class: "form-ok hidden" });
+    body.append(box, okBox);
+    const form = el("form", { onsubmit: (e) => e.preventDefault() }, [
+      el("div", { class: "field" }, [
+        el("label", { text: "New password" }),
+        el("input", { class: "input", type: "password", id: "reset-pass", placeholder: "New password", required: true })
+      ]),
+      el("button", { class: "btn btn-primary btn-block", type: "submit", text: "Reset password" })
+    ]);
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const btn = form.querySelector("button[type=submit]");
+      btn.disabled = true;
+      btn.textContent = "Saving\u2026";
+      try {
+        const res = await api.post("/auth/reset/confirm", {
+          token: resetToken,
+          newPassword: form.querySelector("#reset-pass").value
+        });
+        okBox.textContent = res.message || "Password updated.";
+        okBox.classList.remove("hidden");
+        body.querySelector("#auth-ok").append(
+          el("div", { style: "margin-top:10px" }, [
+            el("a", { class: "btn btn-primary btn-sm", text: "Go to log in", onclick: () => setMode("login") })
+          ])
+        );
+      } catch (err) {
+        box.textContent = err.message;
+        box.classList.remove("hidden");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Reset password";
+      }
+    });
+    body.append(form);
+  }
+
+  // public/js/views/chats.js
+  init_state();
+  init_api();
+  init_ui();
+  init_icons();
+  var container = null;
+  function animatedWorm() {
+    return el("div", { class: "worm-stage" }, [
+      el("div", { class: "worm-rings" }, [el("span", { class: "worm-ring" }), el("span", { class: "worm-ring" }), el("span", { class: "worm-ring" })]),
+      el("img", { class: "worm-logo", src: "data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%0A%20%20%3Cdefs%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22pcg%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23ffb02e%22%2F%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23ff4d6d%22%2F%3E%0A%20%20%20%20%3C%2FlinearGradient%3E%0A%20%20%3C%2Fdefs%3E%0A%20%20%3C!--%20speech%20bubble%20with%20tail%20--%3E%0A%20%20%3Cpath%20d%3D%22M32%205C17.8%205%206.3%2015.2%206.3%2027.8c0%207.8%204.1%2014.5%2010.3%2018.9L13.6%2059l13-5.4c1.8.3%203.6.5%205.4.5%2014.2%200%2025.7-10.2%2025.7-22.8S46.2%205%2032%205z%22%20fill%3D%22url(%23pcg)%22%2F%3E%0A%20%20%3C!--%20friendly%20worm%20(segmented%20curve)%20--%3E%0A%20%20%3Cg%20fill%3D%22%23ffffff%22%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2243%22%20cy%3D%2227%22%20r%3D%225.6%22%2F%3E%20%20%20%20%20%20%3C!--%20head%20--%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2236%22%20cy%3D%2233%22%20r%3D%225.0%22%2F%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2229%22%20cy%3D%2238%22%20r%3D%224.4%22%2F%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2223%22%20cy%3D%2242%22%20r%3D%223.8%22%2F%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2217%22%20cy%3D%2245%22%20r%3D%223.2%22%2F%3E%20%20%20%20%20%20%3C!--%20tail%20--%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2245%22%20cy%3D%2225%22%20r%3D%221.5%22%20fill%3D%22%23ff2d55%22%2F%3E%20%20%20%3C!--%20eye%20--%3E%0A%20%20%3C%2Fg%3E%0A%3C%2Fsvg%3E%0A", alt: "PulseChat" }),
+      el("div", {
+        class: "worm-ekg",
+        html: '<svg viewBox="0 0 240 48" width="190" height="34" aria-hidden="true"><path class="worm-ekg-path" d="M0 24 H64 L74 24 L80 10 L88 38 L94 24 H126 L134 24 L140 12 L148 36 L154 24 H240"/></svg>'
+      })
+    ]);
+  }
+  function render(host) {
+    container = host;
+    draw();
+  }
+  async function refresh() {
+    try {
+      const d = await api.get("/conversations");
+      state_default.conversations = d.conversations;
+      computeUnread();
+      draw();
+    } catch (err) {
+      toast(err.message, "error");
+    }
+  }
+  function draw() {
+    if (container && container.isConnected) container.replaceChildren(build());
+  }
+  function build() {
+    if (!state_default.conversations.length) {
+      return el("div", { class: "empty-state" }, [
+        animatedWorm(),
+        el("h3", { text: "No conversations yet" })
+      ]);
+    }
+    return el("div", { class: "conv-list fade-swap" }, state_default.conversations.map(itemHtml));
+  }
+  function itemHtml(conv2) {
+    const user = conv2.user;
+    const p = state_default.presence[user.id];
+    const online = p ? p.online : user.online;
+    const last = conv2.lastMessage;
+    const mine = last && last.senderId === (state_default.me && state_default.me.id);
+    let preview = "";
+    let time = "";
+    if (last) {
+      const text = last.kind === "image" ? "\u{1F4F7} Photo" : last.body;
+      const tick = mine && !last.temp ? last.readAt ? '<span class="tick read">' + icon("doubleCheck") + "</span>" : last.deliveredAt ? '<span class="tick delivered">' + icon("doubleCheck") + "</span>" : '<span class="tick sent">' + icon("check") + "</span>" : "";
+      preview = tick + esc(text);
+      time = formatTime(last.createdAt);
+    } else {
+      preview = "Start chatting";
+    }
+    const muted = conv2.unreadCount === 0;
+    return el("div", {
+      class: "conv-item" + (muted ? " conv-muted" : ""),
+      onclick: () => location.hash = "#/chat/" + conv2.id
+    }, [
+      el("span", { class: "avatar-wrap", html: avatarHtml(user, "md") + (online ? '<span class="dot dot-online"></span>' : "") }),
+      el("div", { class: "conv-mid" }, [
+        el("div", { class: "conv-name" }, [el("span", { text: user.displayName })]),
+        el("div", { class: "conv-preview", html: preview })
+      ]),
+      el("div", { class: "conv-right" }, [
+        el("span", { class: "conv-time", text: time }),
+        conv2.unreadCount > 0 ? el("span", { class: "badge", text: conv2.unreadCount > 99 ? "99+" : conv2.unreadCount }) : null
+      ])
+    ]);
+  }
+
   // public/js/views/people.js
+  init_state();
+  init_api();
+  init_ui();
+  init_icons();
+  init_calls();
+  var container3 = null;
+  var searchResults = null;
+  var lastQuery = "";
   function render3(host) {
     container3 = host;
     draw3();
@@ -7541,22 +7589,20 @@ img { display: block; max-width: 100%; }
     ]);
     openModal(u.displayName, body);
   }
-  var container3, searchResults, lastQuery;
-  var init_people = __esm({
-    "public/js/views/people.js"() {
-      "use strict";
-      init_state();
-      init_api();
-      init_ui();
-      init_icons();
-      init_calls();
-      container3 = null;
-      searchResults = null;
-      lastQuery = "";
-    }
-  });
+
+  // public/js/app.js
+  init_calls();
+
+  // public/js/views/profile.js
+  init_state();
+  init_api();
+  init_ui();
+  init_icons();
 
   // public/js/media.js
+  init_api();
+  init_ui();
+  var blobCache = /* @__PURE__ */ new Map();
   async function mediaUrl(filename) {
     if (!filename) return null;
     if (blobCache.has(filename)) return blobCache.get(filename);
@@ -7626,17 +7672,12 @@ img { display: block; max-width: 100%; }
     });
     document.getElementById("modal-root").append(backdrop);
   }
-  var blobCache;
-  var init_media = __esm({
-    "public/js/media.js"() {
-      "use strict";
-      init_api();
-      init_ui();
-      blobCache = /* @__PURE__ */ new Map();
-    }
-  });
 
   // public/js/notifications.js
+  init_api();
+  init_ui();
+  var swReg = null;
+  var permissionAsked = false;
   function supported() {
     return "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
   }
@@ -7731,18 +7772,10 @@ img { display: block; max-width: 100%; }
     for (let i = 0; i < rawData.length; ++i) output[i] = rawData.charCodeAt(i);
     return output;
   }
-  var swReg, permissionAsked;
-  var init_notifications = __esm({
-    "public/js/notifications.js"() {
-      "use strict";
-      init_api();
-      init_ui();
-      swReg = null;
-      permissionAsked = false;
-    }
-  });
 
   // public/js/views/profile.js
+  init_calls();
+  var container4 = null;
   function render4(host) {
     container4 = host;
     draw4();
@@ -8028,22 +8061,229 @@ img { display: block; max-width: 100%; }
     await logoutRemote();
     location.hash = "#/login";
   }
-  var container4;
-  var init_profile = __esm({
-    "public/js/views/profile.js"() {
-      "use strict";
-      init_state();
-      init_api();
-      init_ui();
-      init_icons();
-      init_media();
-      init_notifications();
-      init_calls();
-      container4 = null;
+
+  // public/js/views/feed.js
+  init_state();
+  init_api();
+  init_ui();
+  init_icons();
+  var container5 = null;
+  var posts = [];
+  function render5(host) {
+    container5 = host;
+    draw5();
+  }
+  async function refresh4() {
+    try {
+      const d = await api.get("/feed");
+      posts = d.posts;
+      draw5();
+    } catch (err) {
+      toast(err.message, "error");
     }
-  });
+  }
+  function draw5() {
+    if (!container5 || !container5.isConnected) return;
+    container5.replaceChildren(build4());
+  }
+  function build4() {
+    return el("div", { class: "feed fade-swap" }, [
+      composer(),
+      el("div", { class: "feed-list", id: "feed-list" }, posts.length ? posts.map(postCard) : emptyFeed())
+    ]);
+  }
+  function emptyFeed() {
+    return el("div", { class: "empty-state minimal" }, [
+      el("p", { text: "No posts yet. Share what's on your mind \u2014 photos and updates appear here." })
+    ]);
+  }
+  function composer() {
+    const me = state_default.me;
+    const textarea = el("textarea", {
+      class: "feed-input",
+      rows: 2,
+      placeholder: `What's on your mind, ${me ? me.displayName.split(" ")[0] : "friend"}?`
+    });
+    let picked = null;
+    const preview = el("div", { class: "feed-preview hidden" });
+    const postBtn = el("button", {
+      class: "btn btn-primary btn-sm",
+      html: icon("send") + "<span>Post</span>",
+      onclick: async () => {
+        const body = textarea.value.trim();
+        if (!body && !picked) return toast("Write something to post.", "error");
+        postBtn.disabled = true;
+        postBtn.textContent = "Posting\u2026";
+        try {
+          let image = null;
+          if (picked) {
+            const up = await uploadImage(picked.file, { purpose: "message", conversationId: 0 });
+            image = up.filename;
+          }
+          const res = await api.post("/feed", { body, image });
+          posts.unshift(res.post);
+          textarea.value = "";
+          picked = null;
+          preview.classList.add("hidden");
+          preview.replaceChildren();
+          draw5();
+        } catch (err) {
+          toast(err.message, "error");
+        } finally {
+          postBtn.disabled = false;
+          postBtn.innerHTML = icon("send") + "<span>Post</span>";
+        }
+      }
+    });
+    const pickBtn = el("button", {
+      class: "icon-btn",
+      html: icon("image"),
+      title: "Add a photo",
+      onclick: async () => {
+        try {
+          const file = await pickImage(false);
+          picked = { file, url: URL.createObjectURL(file) };
+          preview.replaceChildren(
+            el("img", { src: picked.url, alt: "Post photo" }),
+            el("button", {
+              class: "icon-btn",
+              html: icon("close"),
+              onclick: () => {
+                picked = null;
+                preview.classList.add("hidden");
+                preview.replaceChildren();
+              }
+            })
+          );
+          preview.classList.remove("hidden");
+        } catch {
+        }
+      }
+    });
+    return el("div", { class: "feed-composer" }, [
+      el("div", { style: "display:flex;gap:10px" }, [
+        el("span", { html: avatarHtml(me, "sm") }),
+        textarea
+      ]),
+      preview,
+      el("div", { class: "feed-composer-actions" }, [
+        pickBtn,
+        el("span", { class: "spacer" }),
+        postBtn
+      ])
+    ]);
+  }
+  function postCard(p) {
+    const card = el("div", { class: "post-card" });
+    const head = el("div", { class: "post-head" }, [
+      el("span", { html: avatarHtml(p.author, "sm") }),
+      el("div", { class: "post-author" }, [
+        el("div", { class: "post-name", text: p.author.displayName }),
+        el("div", { class: "post-time", text: formatTime(p.createdAt) })
+      ])
+    ]);
+    card.append(head);
+    if (p.body) card.append(el("div", { class: "post-body", text: p.body }));
+    if (p.image) {
+      const imgBox = el("div", { class: "post-image" });
+      mediaUrl(p.image).then((url) => {
+        const img = el("img", { src: url, alt: "Post photo", loading: "lazy", onclick: () => openViewer(url) });
+        imgBox.append(img);
+      }).catch(() => {
+        imgBox.append(el("div", { style: "padding:12px;color:var(--text-faint);font-size:13px", text: "Image unavailable." }));
+      });
+      card.append(imgBox);
+    }
+    const likeBtn = el("button", {
+      class: "post-action" + (p.liked ? " liked" : ""),
+      html: icon("heart") + `<span>${p.likes || ""}</span>`,
+      onclick: async () => {
+        try {
+          const res = await api.post(`/feed/${p.id}/like`);
+          p.liked = res.liked;
+          p.likes = res.likes;
+          likeBtn.classList.toggle("liked", p.liked);
+          likeBtn.innerHTML = icon("heart") + `<span>${p.likes || ""}</span>`;
+        } catch (err) {
+          toast(err.message, "error");
+        }
+      }
+    });
+    const commentBtn = el("button", {
+      class: "post-action",
+      html: icon("comment") + `<span>${p.comments.length || ""}</span>`,
+      onclick: () => toggleComments(card, p, commentBtn)
+    });
+    const actions = el("div", { class: "post-actions" }, [likeBtn, commentBtn]);
+    card.append(actions);
+    const commentsBox = el("div", { class: "post-comments hidden" });
+    card.append(commentsBox);
+    return card;
+  }
+  function toggleComments(card, p, btn) {
+    const box = card.querySelector(".post-comments");
+    const open = box.classList.contains("hidden");
+    if (open) {
+      box.classList.remove("hidden");
+      renderComments(box, p);
+    } else {
+      box.classList.add("hidden");
+    }
+  }
+  function renderComments(box, p) {
+    box.replaceChildren();
+    for (const c of p.comments) {
+      box.append(
+        el("div", { class: "comment" }, [
+          el("span", { html: avatarHtml(c.author, "xs") }),
+          el("div", { class: "comment-bubble" }, [
+            el("span", { class: "comment-name", text: c.author.displayName + ": " }),
+            el("span", { text: c.body })
+          ])
+        ])
+      );
+    }
+    const input = el("input", {
+      class: "input comment-input",
+      placeholder: "Write a comment\u2026",
+      onkeydown: async (e) => {
+        if (e.key === "Enter" && input.value.trim()) {
+          try {
+            const res = await api.post(`/feed/${p.id}/comments`, { body: input.value.trim() });
+            p.comments.push(res.comment);
+            input.value = "";
+            renderComments(box, p);
+            const btns = box.closest(".post-card").querySelectorAll(".post-action");
+            const cb = btns[1];
+            if (cb) cb.innerHTML = icon("comment") + `<span>${p.comments.length}</span>`;
+          } catch (err) {
+            toast(err.message, "error");
+          }
+        }
+      }
+    });
+    box.append(input);
+  }
+  function addPostLive(post) {
+    posts = posts.filter((x) => x.id !== post.id);
+    posts.unshift(post);
+    draw5();
+  }
 
   // public/js/views/chat.js
+  init_state();
+  init_api();
+  init_socket();
+  init_ui();
+  init_icons();
+  var conv = null;
+  var loadingMore = false;
+  var hasMore = false;
+  var tempCounter = 0;
+  var hideTypingTimer = null;
+  var jumpVisible = false;
+  var dom = { col: null, chat: null, messages: null, input: null };
+  var nodesByConv = /* @__PURE__ */ new Map();
   function cache() {
     if (!state_default.messagesCache[conv.id]) state_default.messagesCache[conv.id] = [];
     return state_default.messagesCache[conv.id];
@@ -8071,7 +8311,7 @@ img { display: block; max-width: 100%; }
     }
     conv = { id: data.id, user: data.user };
     state_default.activeConvId = data.id;
-    build4();
+    build5();
     await loadInitial();
     markRead();
   }
@@ -8085,7 +8325,7 @@ img { display: block; max-width: 100%; }
   function isOpen(conversationId) {
     return conv && conv.id === conversationId;
   }
-  function build4() {
+  function build5() {
     const user = conv.user;
     dom.col = document.getElementById("colChat");
     dom.chat = el("div", { class: "chat" });
@@ -8105,7 +8345,7 @@ img { display: block; max-width: 100%; }
     ]);
     updateHeaderStatus();
     dom.messages = el("div", { class: "messages", onscroll: onScroll });
-    const composer = el("div", { class: "composer" }, [
+    const composer2 = el("div", { class: "composer" }, [
       el("button", { class: "icon-btn", html: icon("image"), title: "Send photo from gallery", onclick: () => sendImage(false) }),
       el("button", { class: "icon-btn", html: icon("camera"), title: "Take a photo", onclick: () => sendImage(true) }),
       el("textarea", {
@@ -8125,8 +8365,8 @@ img { display: block; max-width: 100%; }
       }),
       el("button", { class: "icon-btn send", id: "composer-send", html: icon("send"), title: "Send", onclick: sendText })
     ]);
-    dom.input = composer.querySelector("#composer-input");
-    dom.chat.append(header, dom.messages, composer);
+    dom.input = composer2.querySelector("#composer-input");
+    dom.chat.append(header, dom.messages, composer2);
     dom.col.replaceChildren(dom.chat);
     dom.col.classList.add("open");
     setTimeout(() => dom.input && dom.input.focus(), 120);
@@ -8239,6 +8479,15 @@ img { display: block; max-width: 100%; }
       if (box) box.replaceWith(el("div", { style: "padding:10px;color:var(--danger);font-size:13px", text: "Image could not be loaded." }));
     }
   }
+  var mediaUrlCache = /* @__PURE__ */ (() => {
+    const map = /* @__PURE__ */ new Map();
+    return async (filename) => {
+      if (map.has(filename)) return map.get(filename);
+      const url = await mediaUrl(filename);
+      map.set(filename, url);
+      return url;
+    };
+  })();
   function metaHtml(m) {
     const time = el("span", { text: clock(m.createdAt) });
     if (m.status === "failed") {
@@ -8345,6 +8594,7 @@ img { display: block; max-width: 100%; }
     t.style.height = "auto";
     t.style.height = Math.min(t.scrollHeight, 120) + "px";
   }
+  var typingEmitTimer = null;
   function emitTyping() {
     if (!conv) return;
     clearTimeout(typingEmitTimer);
@@ -8456,380 +8706,340 @@ img { display: block; max-width: 100%; }
       failMessage(temp.id, err.message);
     }
   }
-  var conv, loadingMore, hasMore, tempCounter, hideTypingTimer, jumpVisible, dom, nodesByConv, mediaUrlCache, typingEmitTimer;
-  var init_chat = __esm({
-    "public/js/views/chat.js"() {
-      "use strict";
-      init_state();
-      init_api();
-      init_socket();
-      init_ui();
-      init_icons();
-      init_media();
-      conv = null;
-      loadingMore = false;
-      hasMore = false;
-      tempCounter = 0;
-      hideTypingTimer = null;
-      jumpVisible = false;
-      dom = { col: null, chat: null, messages: null, input: null };
-      nodesByConv = /* @__PURE__ */ new Map();
-      mediaUrlCache = /* @__PURE__ */ (() => {
-        const map = /* @__PURE__ */ new Map();
-        return async (filename) => {
-          if (map.has(filename)) return map.get(filename);
-          const url = await mediaUrl(filename);
-          map.set(filename, url);
-          return url;
-        };
-      })();
-      typingEmitTimer = null;
-    }
-  });
 
   // public/js/app.js
-  var require_app = __commonJS({
-    "public/js/app.js"() {
-      init_api();
-      init_socket();
-      init_state();
-      init_ui();
-      init_icons();
-      init_auth();
-      init_chats();
-      init_people();
-      init_calls();
-      init_profile();
-      init_chat();
-      init_rtc();
-      init_notifications();
-      var TABS = [
-        { id: "chats", label: "Chats", icon: "chats" },
-        { id: "people", label: "People", icon: "people" },
-        { id: "calls", label: "Calls", icon: "calls" },
-        { id: "profile", label: "Profile", icon: "profile" }
-      ];
-      var wired = false;
-      async function boot() {
-        setTheme(getTheme());
-        state_default.soundsOn = safeGet("pc.sounds", "1") !== "0";
-        window.addEventListener("hashchange", route);
-        window.addEventListener("online", updateConn);
-        window.addEventListener("offline", updateConn);
-        window.addEventListener("pc:authed", enterMain);
-        if (hasSession()) {
-          await enterMain();
-        } else {
-          renderAuthView();
-          route();
-        }
+  init_rtc();
+  var TABS = [
+    { id: "feed", label: "Feed", icon: "feed" },
+    { id: "chats", label: "Chats", icon: "chats" },
+    { id: "people", label: "People", icon: "people" },
+    { id: "calls", label: "Calls", icon: "calls" },
+    { id: "profile", label: "Profile", icon: "profile" }
+  ];
+  var wired = false;
+  async function boot() {
+    setTheme(getTheme());
+    state_default.soundsOn = safeGet("pc.sounds", "1") !== "0";
+    window.addEventListener("hashchange", route);
+    window.addEventListener("online", updateConn);
+    window.addEventListener("offline", updateConn);
+    window.addEventListener("pc:authed", enterMain);
+    if (hasSession()) {
+      await enterMain();
+    } else {
+      renderAuthView();
+      route();
+    }
+  }
+  async function enterMain() {
+    if (!hasSession()) {
+      renderAuthView();
+      return;
+    }
+    try {
+      if (!state_default.me) {
+        const me = await fetchMe();
+        state_default.me = me;
+        document.body.dataset.meId = String(me.id);
       }
-      async function enterMain() {
-        if (!hasSession()) {
-          renderAuthView();
-          return;
-        }
-        try {
-          if (!state_default.me) {
-            const me = await fetchMe();
-            state_default.me = me;
-            document.body.dataset.meId = String(me.id);
-          }
-          if (!isConnected() && getAccessToken()) {
-            connect();
-            wireSocket();
-          }
-          ensureShell();
-          refreshAll();
-          const hash = location.hash;
-          const onTab = TABS.some((t) => "#" + t.id === hash) || hash.startsWith("#/chat/");
-          if (!onTab) location.replace("#/chats");
-          route();
-        } catch (err) {
-          if (err && (err.status === 401 || err.status === 403)) {
-            clearSession();
-            renderAuthView();
-            route();
-          } else {
-            toast("Could not reach the server \u2014 retrying\u2026", "error", 3e3);
-            setTimeout(enterMain, 1500);
-          }
-        }
+      if (!isConnected() && getAccessToken()) {
+        connect();
+        wireSocket();
       }
-      function renderAuthView(opts) {
-        const app = document.getElementById("app");
-        renderAuth(app, opts || {});
+      ensureShell();
+      refreshAll();
+      const hash = location.hash;
+      const onTab = TABS.some((t) => "#" + t.id === hash) || hash.startsWith("#/chat/");
+      if (!onTab) location.replace("#/chats");
+      route();
+    } catch (err) {
+      if (err && (err.status === 401 || err.status === 403)) {
+        clearSession();
+        renderAuthView();
+        route();
+      } else {
+        toast("Could not reach the server \u2014 retrying\u2026", "error", 3e3);
+        setTimeout(enterMain, 1500);
       }
-      function renderShell() {
-        const app = document.getElementById("app");
-        const shell = el("div", { class: "shell", id: "shell" }, [
-          el("div", { class: "col-list" }, [
-            pulseBackground(),
-            el("header", { class: "list-header" }, [
-              el("div", { class: "brand" }, [
-                el("img", { src: "data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%0A%20%20%3Cdefs%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22pcg%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23ffb02e%22%2F%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23ff4d6d%22%2F%3E%0A%20%20%20%20%3C%2FlinearGradient%3E%0A%20%20%3C%2Fdefs%3E%0A%20%20%3C!--%20speech%20bubble%20with%20tail%20--%3E%0A%20%20%3Cpath%20d%3D%22M32%205C17.8%205%206.3%2015.2%206.3%2027.8c0%207.8%204.1%2014.5%2010.3%2018.9L13.6%2059l13-5.4c1.8.3%203.6.5%205.4.5%2014.2%200%2025.7-10.2%2025.7-22.8S46.2%205%2032%205z%22%20fill%3D%22url(%23pcg)%22%2F%3E%0A%20%20%3C!--%20friendly%20worm%20(segmented%20curve)%20--%3E%0A%20%20%3Cg%20fill%3D%22%23ffffff%22%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2243%22%20cy%3D%2227%22%20r%3D%225.6%22%2F%3E%20%20%20%20%20%20%3C!--%20head%20--%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2236%22%20cy%3D%2233%22%20r%3D%225.0%22%2F%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2229%22%20cy%3D%2238%22%20r%3D%224.4%22%2F%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2223%22%20cy%3D%2242%22%20r%3D%223.8%22%2F%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2217%22%20cy%3D%2245%22%20r%3D%223.2%22%2F%3E%20%20%20%20%20%20%3C!--%20tail%20--%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2245%22%20cy%3D%2225%22%20r%3D%221.5%22%20fill%3D%22%23ff2d55%22%2F%3E%20%20%20%3C!--%20eye%20--%3E%0A%20%20%3C%2Fg%3E%0A%3C%2Fsvg%3E%0A", alt: "" }),
-                el("h1", { text: "PulseChat Messenger" })
-              ]),
-              el("div", { style: "display:flex;align-items:center;gap:8px" }, [
-                el("span", { class: "conn-pill connecting", id: "conn-pill" }, [
-                  el("span", { class: "dot" }),
-                  el("span", { id: "conn-label", text: "Connecting\u2026" })
-                ]),
-                el("button", {
-                  class: "icon-btn header-logout",
-                  html: icon("logout"),
-                  title: "Log out",
-                  ariaLabel: "Log out",
-                  onclick: async () => {
-                    const { logoutRemote: logoutRemote2 } = await Promise.resolve().then(() => (init_api(), api_exports));
-                    await logoutRemote2();
-                    location.hash = "#/login";
-                  }
-                }),
-                el("span", {
-                  class: "avatar-wrap",
-                  html: avatarHtml(state_default.me, "sm"),
-                  style: "cursor:pointer",
-                  onclick: () => location.hash = "#/profile"
-                })
-              ])
-            ]),
-            el("nav", { class: "tabs" }, TABS.map(tabButton)),
-            el("main", { class: "tab-content", id: "tabContent" })
+    }
+  }
+  function renderAuthView(opts) {
+    const app = document.getElementById("app");
+    renderAuth(app, opts || {});
+  }
+  function renderShell() {
+    const app = document.getElementById("app");
+    const shell = el("div", { class: "shell", id: "shell" }, [
+      el("div", { class: "col-list" }, [
+        pulseBackground(),
+        el("header", { class: "list-header" }, [
+          el("div", { class: "brand" }, [
+            el("img", { src: "data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%0A%20%20%3Cdefs%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22pcg%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23ffb02e%22%2F%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23ff4d6d%22%2F%3E%0A%20%20%20%20%3C%2FlinearGradient%3E%0A%20%20%3C%2Fdefs%3E%0A%20%20%3C!--%20speech%20bubble%20with%20tail%20--%3E%0A%20%20%3Cpath%20d%3D%22M32%205C17.8%205%206.3%2015.2%206.3%2027.8c0%207.8%204.1%2014.5%2010.3%2018.9L13.6%2059l13-5.4c1.8.3%203.6.5%205.4.5%2014.2%200%2025.7-10.2%2025.7-22.8S46.2%205%2032%205z%22%20fill%3D%22url(%23pcg)%22%2F%3E%0A%20%20%3C!--%20friendly%20worm%20(segmented%20curve)%20--%3E%0A%20%20%3Cg%20fill%3D%22%23ffffff%22%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2243%22%20cy%3D%2227%22%20r%3D%225.6%22%2F%3E%20%20%20%20%20%20%3C!--%20head%20--%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2236%22%20cy%3D%2233%22%20r%3D%225.0%22%2F%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2229%22%20cy%3D%2238%22%20r%3D%224.4%22%2F%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2223%22%20cy%3D%2242%22%20r%3D%223.8%22%2F%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2217%22%20cy%3D%2245%22%20r%3D%223.2%22%2F%3E%20%20%20%20%20%20%3C!--%20tail%20--%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2245%22%20cy%3D%2225%22%20r%3D%221.5%22%20fill%3D%22%23ff2d55%22%2F%3E%20%20%20%3C!--%20eye%20--%3E%0A%20%20%3C%2Fg%3E%0A%3C%2Fsvg%3E%0A", alt: "" }),
+            el("h1", { text: "PulseChat Messenger" })
           ]),
-          el("div", { class: "col-chat", id: "colChat" }, [
-            pulseBackground(),
-            el("div", { class: "chat-empty" }, [
-              el("div", { class: "ce-bg" }, [
-                el("span", { class: "ce-bubble b1" }),
-                el("span", { class: "ce-bubble b2" }),
-                el("span", { class: "ce-bubble b3" }),
-                el("span", { class: "ce-bubble b4" }),
-                el("span", { class: "ce-bubble b5" })
-              ]),
-              el("div", { class: "ce-stage" }, [
-                el("div", { class: "ce-rings" }, [el("span", { class: "ce-ring" }), el("span", { class: "ce-ring" }), el("span", { class: "ce-ring" })]),
-                el("img", { class: "ce-logo", src: "data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%0A%20%20%3Cdefs%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22pcg%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23ffb02e%22%2F%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23ff4d6d%22%2F%3E%0A%20%20%20%20%3C%2FlinearGradient%3E%0A%20%20%3C%2Fdefs%3E%0A%20%20%3C!--%20speech%20bubble%20with%20tail%20--%3E%0A%20%20%3Cpath%20d%3D%22M32%205C17.8%205%206.3%2015.2%206.3%2027.8c0%207.8%204.1%2014.5%2010.3%2018.9L13.6%2059l13-5.4c1.8.3%203.6.5%205.4.5%2014.2%200%2025.7-10.2%2025.7-22.8S46.2%205%2032%205z%22%20fill%3D%22url(%23pcg)%22%2F%3E%0A%20%20%3C!--%20friendly%20worm%20(segmented%20curve)%20--%3E%0A%20%20%3Cg%20fill%3D%22%23ffffff%22%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2243%22%20cy%3D%2227%22%20r%3D%225.6%22%2F%3E%20%20%20%20%20%20%3C!--%20head%20--%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2236%22%20cy%3D%2233%22%20r%3D%225.0%22%2F%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2229%22%20cy%3D%2238%22%20r%3D%224.4%22%2F%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2223%22%20cy%3D%2242%22%20r%3D%223.8%22%2F%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2217%22%20cy%3D%2245%22%20r%3D%223.2%22%2F%3E%20%20%20%20%20%20%3C!--%20tail%20--%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2245%22%20cy%3D%2225%22%20r%3D%221.5%22%20fill%3D%22%23ff2d55%22%2F%3E%20%20%20%3C!--%20eye%20--%3E%0A%20%20%3C%2Fg%3E%0A%3C%2Fsvg%3E%0A", alt: "PulseChat" }),
-                el("div", {
-                  class: "ce-ekg",
-                  html: '<svg viewBox="0 0 240 48" width="220" height="40" aria-hidden="true"><path class="ce-ekg-path" d="M0 24 H64 L74 24 L80 10 L88 38 L94 24 H126 L134 24 L140 12 L148 36 L154 24 H240"/><circle class="ce-ekg-dot" cx="0" cy="24" r="3.2"/></svg>'
-                })
-              ]),
-              el("h2", { text: "Welcome to PulseChat Messenger" }),
-              el("p", { text: "Pick a conversation from the list, or find people to connect with. Messages, photos and video calls all live here \u2014 it's real, and it's yours." }),
-              el("button", { class: "btn btn-primary", text: "Find people", onclick: () => location.hash = "#/people" })
-            ])
-          ]),
-          el("nav", { class: "bottom-nav" }, TABS.map(tabButton))
-        ]);
-        app.replaceChildren(shell);
-      }
-      function pulseBackground() {
-        return el("div", { class: "bg-pulse", "aria-hidden": "true" }, [
-          el("div", { class: "bg-pulse-stage" }, [
-            el("div", { class: "bg-pulse-rings" }, [
-              el("span", { class: "bg-pulse-ring" }),
-              el("span", { class: "bg-pulse-ring" }),
-              el("span", { class: "bg-pulse-ring" })
+          el("div", { style: "display:flex;align-items:center;gap:8px" }, [
+            el("span", { class: "conn-pill connecting", id: "conn-pill" }, [
+              el("span", { class: "dot" }),
+              el("span", { id: "conn-label", text: "Connecting\u2026" })
             ]),
-            el("img", { class: "bg-pulse-logo", src: "data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%0A%20%20%3Cdefs%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22pcg%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23ffb02e%22%2F%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23ff4d6d%22%2F%3E%0A%20%20%20%20%3C%2FlinearGradient%3E%0A%20%20%3C%2Fdefs%3E%0A%20%20%3C!--%20speech%20bubble%20with%20tail%20--%3E%0A%20%20%3Cpath%20d%3D%22M32%205C17.8%205%206.3%2015.2%206.3%2027.8c0%207.8%204.1%2014.5%2010.3%2018.9L13.6%2059l13-5.4c1.8.3%203.6.5%205.4.5%2014.2%200%2025.7-10.2%2025.7-22.8S46.2%205%2032%205z%22%20fill%3D%22url(%23pcg)%22%2F%3E%0A%20%20%3C!--%20friendly%20worm%20(segmented%20curve)%20--%3E%0A%20%20%3Cg%20fill%3D%22%23ffffff%22%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2243%22%20cy%3D%2227%22%20r%3D%225.6%22%2F%3E%20%20%20%20%20%20%3C!--%20head%20--%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2236%22%20cy%3D%2233%22%20r%3D%225.0%22%2F%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2229%22%20cy%3D%2238%22%20r%3D%224.4%22%2F%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2223%22%20cy%3D%2242%22%20r%3D%223.8%22%2F%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2217%22%20cy%3D%2245%22%20r%3D%223.2%22%2F%3E%20%20%20%20%20%20%3C!--%20tail%20--%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2245%22%20cy%3D%2225%22%20r%3D%221.5%22%20fill%3D%22%23ff2d55%22%2F%3E%20%20%20%3C!--%20eye%20--%3E%0A%20%20%3C%2Fg%3E%0A%3C%2Fsvg%3E%0A", alt: "" }),
-            el("div", {
-              class: "bg-pulse-ekg",
-              html: '<svg viewBox="0 0 240 48" width="200" height="36" aria-hidden="true"><path class="bg-pulse-ekg-path" d="M0 24 H64 L74 24 L80 10 L88 38 L94 24 H126 L134 24 L140 12 L148 36 L154 24 H240"/></svg>'
+            el("button", {
+              class: "icon-btn header-logout",
+              html: icon("logout"),
+              title: "Log out",
+              ariaLabel: "Log out",
+              onclick: async () => {
+                const { logoutRemote: logoutRemote2 } = await Promise.resolve().then(() => (init_api(), api_exports));
+                await logoutRemote2();
+                location.hash = "#/login";
+              }
+            }),
+            el("span", {
+              class: "avatar-wrap",
+              html: avatarHtml(state_default.me, "sm"),
+              style: "cursor:pointer",
+              onclick: () => location.hash = "#/profile"
             })
           ])
-        ]);
-      }
-      function tabButton(tab) {
-        return el("button", { class: "tab", id: "tab-" + tab.id, "data-tab": tab.id, onclick: () => location.hash = "#/" + tab.id }, [
-          el("span", { html: icon(tab.icon) }),
-          el("span", { text: tab.label }),
-          el("span", { class: "badge hidden", id: "badge-" + tab.id })
-        ]);
-      }
-      function ensureShell() {
-        if (!document.getElementById("shell")) renderShell();
-      }
-      function updateTabActive() {
-        for (const t of TABS) {
-          document.querySelectorAll(`.tab[data-tab="${t.id}"]`).forEach((btn) => btn.classList.toggle("active", state_default.view === t.id));
-        }
-        updateBadges();
-      }
-      function updateBadges() {
-        const setBadge = (tabId, count) => {
-          document.querySelectorAll("#badge-" + tabId).forEach((b) => {
-            b.textContent = count > 99 ? "99+" : String(count);
-            b.classList.toggle("hidden", count === 0);
-          });
-        };
-        setBadge("chats", state_default.unreadTotal);
-        setBadge("people", state_default.incomingRequests.length);
-        const missed = state_default.calls.filter((c) => (c.status === "missed" || c.status === "unanswered") && c.direction === "incoming").length;
-        setBadge("calls", missed);
-      }
-      function route() {
-        const hash = location.hash || "#/";
-        if (hash === "#/" || hash === "") {
-          location.replace("#/chats");
-          return;
-        }
-        if (hash.startsWith("#/reset")) {
-          const token = new URLSearchParams(hash.split("?")[1] || "").get("token");
-          renderAuthView({ mode: "reset", token });
-          return;
-        }
-        if (["#/login", "#/register", "#/forgot"].includes(hash)) {
-          if (hasSession() && state_default.me) {
-            location.replace("#/chats");
-          } else {
-            renderAuthView({ mode: hash.slice(2) });
-          }
-          return;
-        }
-        if (hash.startsWith("#/chat/")) {
-          if (!hasSession()) return renderAuthView();
-          if (!state_default.me) return enterMain();
-          const id = Number(hash.split("/")[2]);
-          if (!Number.isInteger(id)) return location.replace("#/chats");
-          ensureShell();
-          set("view", "chats");
-          updateTabActive();
-          openChat(id);
-          return;
-        }
-        const view = hash.slice(2);
-        if (!TABS.some((t) => t.id === view)) {
-          location.replace("#/chats");
-          return;
-        }
-        if (!hasSession()) return renderAuthView();
-        if (!state_default.me) return enterMain();
-        ensureShell();
-        set("view", view);
-        updateTabActive();
-        renderTab(view);
-      }
-      function renderTab(view) {
-        const host = document.getElementById("tabContent");
-        if (!host) return;
-        if (view === "chats") {
-          render(host);
-          refresh();
-        } else if (view === "people") {
-          render3(host);
-          refresh3();
-        } else if (view === "calls") {
-          render2(host);
-          refresh2();
-        } else if (view === "profile") {
-          render4(host);
-        }
-      }
-      function refreshAll() {
-        refresh();
-        refresh3();
-        refresh2();
-        updateConn();
-      }
-      function updateConn() {
-        const pill = document.getElementById("conn-pill");
-        const label = document.getElementById("conn-label");
-        if (!pill || !label) return;
-        const offline = !navigator.onLine;
-        const connected = isConnected() && navigator.onLine;
-        pill.className = "conn-pill " + (offline ? "offline" : connected ? "connected" : "connecting");
-        label.textContent = offline ? "Offline" : connected ? "Online" : "Reconnecting\u2026";
-      }
-      function wireSocket() {
-        if (wired) return;
-        wired = true;
-        on("socket:connect", () => {
-          set("socketConnected", true);
-          updateConn();
-          refreshAll();
-        });
-        on("socket:disconnect", () => {
-          set("socketConnected", false);
-          updateConn();
-        });
-        on("socket:error", () => updateConn());
-        on("presence", (p) => {
-          trackPresence(p);
-          draw();
-          draw3();
-          updateHeaderStatus();
-        });
-        on("message:new", (p) => {
-          upsertConversation(p.conversation);
-          if (isOpen(p.conversation.id)) {
-            appendMessage(p.message);
-            markReadIfActive();
-            resetConversationUnread(p.conversation.id);
-          } else {
-            const name = p.conversation.user.displayName;
-            if (state_default.soundsOn && !document.hasFocus()) playBlip();
-            toast(`New message from ${name}`, "info", 2600);
-            notify("PulseChat Messenger", `New message from ${name}`, `/chat/${p.conversation.id}`);
-          }
-          draw();
-          updateBadges();
-        });
-        on("message:delivered", (p) => {
-          applyMessageDelivered(p.conversationId, p.messageIds, p.at);
-          updateReceipts(p.conversationId);
-          draw();
-        });
-        on("message:read", (p) => {
-          applyMessageRead(p.conversationId, p.byUserId, p.upToMessageId);
-          updateReceipts(p.conversationId);
-          draw();
-          updateBadges();
-        });
-        on("typing", (p) => {
-          if (isOpen(p.conversationId)) showTyping(p.userId);
-        });
-        on("contact:request", (p) => {
-          addIncomingRequest(p.from);
-          updateBadges();
-          if (state_default.view === "people") refresh3();
-          toast(`${p.from.displayName} sent you a friend request`, "info", 3500);
-          notify("PulseChat Messenger", `${p.from.displayName} sent you a friend request`, "/people");
-        });
-        on("contact:accepted", (p) => {
-          addContact({ ...p.contact, relation: "accepted" });
-          if (state_default.view === "people") refresh3();
-          toast(`${p.contact.displayName} accepted your friend request`, "success", 3500);
-          notify("PulseChat Messenger", `${p.contact.displayName} accepted your request`, "/chats");
-        });
-        on("contact:declined", () => {
-          if (state_default.view === "people") refresh3();
-          toast("Your friend request was declined", "info");
-        });
-        on("contact:removed", (p) => {
-          removeContact(p.userId);
-          const conv2 = state_default.conversations.find((c) => c.user.id === p.userId);
-          if (conv2 && isOpen(conv2.id)) closeChat();
-          if (state_default.view === "people") refresh3();
-          draw();
-          updateBadges();
-          toast("A contact was removed", "info");
-        });
-        on("call:incoming", (p) => onIncoming(p));
-        on("call:accepted", (p) => onAccepted(p));
-        on("call:declined", (p) => onDeclined(p));
-        on("call:cancelled", (p) => onCancelled(p));
-        on("call:timeout", (p) => onTimeout(p));
-        on("call:unavailable", (p) => onUnavailable(p));
-        on("call:ended", (p) => onEnded(p));
-        on("call:error", (p) => onCallError(p));
-        on("signal", (p) => onSignal(p));
-        setInterval(() => refreshAuth(), 4 * 60 * 1e3);
-      }
-      boot();
+        ]),
+        el("nav", { class: "tabs" }, TABS.map(tabButton)),
+        el("main", { class: "tab-content", id: "tabContent" })
+      ]),
+      el("div", { class: "col-chat", id: "colChat" }, [
+        pulseBackground(),
+        el("div", { class: "chat-empty" }, [
+          el("div", { class: "ce-bg" }, [
+            el("span", { class: "ce-bubble b1" }),
+            el("span", { class: "ce-bubble b2" }),
+            el("span", { class: "ce-bubble b3" }),
+            el("span", { class: "ce-bubble b4" }),
+            el("span", { class: "ce-bubble b5" })
+          ]),
+          el("div", { class: "ce-stage" }, [
+            el("div", { class: "ce-rings" }, [el("span", { class: "ce-ring" }), el("span", { class: "ce-ring" }), el("span", { class: "ce-ring" })]),
+            el("img", { class: "ce-logo", src: "data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%0A%20%20%3Cdefs%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22pcg%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23ffb02e%22%2F%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23ff4d6d%22%2F%3E%0A%20%20%20%20%3C%2FlinearGradient%3E%0A%20%20%3C%2Fdefs%3E%0A%20%20%3C!--%20speech%20bubble%20with%20tail%20--%3E%0A%20%20%3Cpath%20d%3D%22M32%205C17.8%205%206.3%2015.2%206.3%2027.8c0%207.8%204.1%2014.5%2010.3%2018.9L13.6%2059l13-5.4c1.8.3%203.6.5%205.4.5%2014.2%200%2025.7-10.2%2025.7-22.8S46.2%205%2032%205z%22%20fill%3D%22url(%23pcg)%22%2F%3E%0A%20%20%3C!--%20friendly%20worm%20(segmented%20curve)%20--%3E%0A%20%20%3Cg%20fill%3D%22%23ffffff%22%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2243%22%20cy%3D%2227%22%20r%3D%225.6%22%2F%3E%20%20%20%20%20%20%3C!--%20head%20--%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2236%22%20cy%3D%2233%22%20r%3D%225.0%22%2F%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2229%22%20cy%3D%2238%22%20r%3D%224.4%22%2F%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2223%22%20cy%3D%2242%22%20r%3D%223.8%22%2F%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2217%22%20cy%3D%2245%22%20r%3D%223.2%22%2F%3E%20%20%20%20%20%20%3C!--%20tail%20--%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2245%22%20cy%3D%2225%22%20r%3D%221.5%22%20fill%3D%22%23ff2d55%22%2F%3E%20%20%20%3C!--%20eye%20--%3E%0A%20%20%3C%2Fg%3E%0A%3C%2Fsvg%3E%0A", alt: "PulseChat" }),
+            el("div", {
+              class: "ce-ekg",
+              html: '<svg viewBox="0 0 240 48" width="220" height="40" aria-hidden="true"><path class="ce-ekg-path" d="M0 24 H64 L74 24 L80 10 L88 38 L94 24 H126 L134 24 L140 12 L148 36 L154 24 H240"/><circle class="ce-ekg-dot" cx="0" cy="24" r="3.2"/></svg>'
+            })
+          ]),
+          el("h2", { text: "Welcome to PulseChat Messenger" }),
+          el("p", { text: "Pick a conversation from the list, or find people to connect with. Messages, photos and video calls all live here \u2014 it's real, and it's yours." }),
+          el("button", { class: "btn btn-primary", text: "Find people", onclick: () => location.hash = "#/people" })
+        ])
+      ]),
+      el("nav", { class: "bottom-nav" }, TABS.map(tabButton))
+    ]);
+    app.replaceChildren(shell);
+  }
+  function pulseBackground() {
+    return el("div", { class: "bg-pulse", "aria-hidden": "true" }, [
+      el("div", { class: "bg-pulse-stage" }, [
+        el("div", { class: "bg-pulse-rings" }, [
+          el("span", { class: "bg-pulse-ring" }),
+          el("span", { class: "bg-pulse-ring" }),
+          el("span", { class: "bg-pulse-ring" })
+        ]),
+        el("img", { class: "bg-pulse-logo", src: "data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%0A%20%20%3Cdefs%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22pcg%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23ffb02e%22%2F%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23ff4d6d%22%2F%3E%0A%20%20%20%20%3C%2FlinearGradient%3E%0A%20%20%3C%2Fdefs%3E%0A%20%20%3C!--%20speech%20bubble%20with%20tail%20--%3E%0A%20%20%3Cpath%20d%3D%22M32%205C17.8%205%206.3%2015.2%206.3%2027.8c0%207.8%204.1%2014.5%2010.3%2018.9L13.6%2059l13-5.4c1.8.3%203.6.5%205.4.5%2014.2%200%2025.7-10.2%2025.7-22.8S46.2%205%2032%205z%22%20fill%3D%22url(%23pcg)%22%2F%3E%0A%20%20%3C!--%20friendly%20worm%20(segmented%20curve)%20--%3E%0A%20%20%3Cg%20fill%3D%22%23ffffff%22%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2243%22%20cy%3D%2227%22%20r%3D%225.6%22%2F%3E%20%20%20%20%20%20%3C!--%20head%20--%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2236%22%20cy%3D%2233%22%20r%3D%225.0%22%2F%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2229%22%20cy%3D%2238%22%20r%3D%224.4%22%2F%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2223%22%20cy%3D%2242%22%20r%3D%223.8%22%2F%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2217%22%20cy%3D%2245%22%20r%3D%223.2%22%2F%3E%20%20%20%20%20%20%3C!--%20tail%20--%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2245%22%20cy%3D%2225%22%20r%3D%221.5%22%20fill%3D%22%23ff2d55%22%2F%3E%20%20%20%3C!--%20eye%20--%3E%0A%20%20%3C%2Fg%3E%0A%3C%2Fsvg%3E%0A", alt: "" }),
+        el("div", {
+          class: "bg-pulse-ekg",
+          html: '<svg viewBox="0 0 240 48" width="200" height="36" aria-hidden="true"><path class="bg-pulse-ekg-path" d="M0 24 H64 L74 24 L80 10 L88 38 L94 24 H126 L134 24 L140 12 L148 36 L154 24 H240"/></svg>'
+        })
+      ])
+    ]);
+  }
+  function tabButton(tab) {
+    return el("button", { class: "tab", id: "tab-" + tab.id, "data-tab": tab.id, onclick: () => location.hash = "#/" + tab.id }, [
+      el("span", { html: icon(tab.icon) }),
+      el("span", { text: tab.label }),
+      el("span", { class: "badge hidden", id: "badge-" + tab.id })
+    ]);
+  }
+  function ensureShell() {
+    if (!document.getElementById("shell")) renderShell();
+  }
+  function updateTabActive() {
+    for (const t of TABS) {
+      document.querySelectorAll(`.tab[data-tab="${t.id}"]`).forEach((btn) => btn.classList.toggle("active", state_default.view === t.id));
     }
-  });
-  require_app();
+    updateBadges();
+  }
+  function updateBadges() {
+    const setBadge = (tabId, count) => {
+      document.querySelectorAll("#badge-" + tabId).forEach((b) => {
+        b.textContent = count > 99 ? "99+" : String(count);
+        b.classList.toggle("hidden", count === 0);
+      });
+    };
+    setBadge("chats", state_default.unreadTotal);
+    setBadge("people", state_default.incomingRequests.length);
+    const missed = state_default.calls.filter((c) => (c.status === "missed" || c.status === "unanswered") && c.direction === "incoming").length;
+    setBadge("calls", missed);
+  }
+  function route() {
+    const hash = location.hash || "#/";
+    if (hash === "#/" || hash === "") {
+      location.replace("#/chats");
+      return;
+    }
+    if (hash.startsWith("#/reset")) {
+      const token = new URLSearchParams(hash.split("?")[1] || "").get("token");
+      renderAuthView({ mode: "reset", token });
+      return;
+    }
+    if (["#/login", "#/register", "#/forgot"].includes(hash)) {
+      if (hasSession() && state_default.me) {
+        location.replace("#/chats");
+      } else {
+        renderAuthView({ mode: hash.slice(2) });
+      }
+      return;
+    }
+    if (hash.startsWith("#/chat/")) {
+      if (!hasSession()) return renderAuthView();
+      if (!state_default.me) return enterMain();
+      const id = Number(hash.split("/")[2]);
+      if (!Number.isInteger(id)) return location.replace("#/chats");
+      ensureShell();
+      set("view", "chats");
+      updateTabActive();
+      openChat(id);
+      return;
+    }
+    const view = hash.slice(2);
+    if (!TABS.some((t) => t.id === view)) {
+      location.replace("#/chats");
+      return;
+    }
+    if (!hasSession()) return renderAuthView();
+    if (!state_default.me) return enterMain();
+    ensureShell();
+    set("view", view);
+    updateTabActive();
+    renderTab(view);
+  }
+  function renderTab(view) {
+    const host = document.getElementById("tabContent");
+    if (!host) return;
+    if (view === "feed") {
+      render5(host);
+      refresh4();
+    } else if (view === "chats") {
+      render(host);
+      refresh();
+    } else if (view === "people") {
+      render3(host);
+      refresh3();
+    } else if (view === "calls") {
+      render2(host);
+      refresh2();
+    } else if (view === "profile") {
+      render4(host);
+    }
+  }
+  function refreshAll() {
+    refresh();
+    refresh3();
+    refresh2();
+    updateConn();
+  }
+  function updateConn() {
+    const pill = document.getElementById("conn-pill");
+    const label = document.getElementById("conn-label");
+    if (!pill || !label) return;
+    const offline = !navigator.onLine;
+    const connected = isConnected() && navigator.onLine;
+    pill.className = "conn-pill " + (offline ? "offline" : connected ? "connected" : "connecting");
+    label.textContent = offline ? "Offline" : connected ? "Online" : "Reconnecting\u2026";
+  }
+  function wireSocket() {
+    if (wired) return;
+    wired = true;
+    on("socket:connect", () => {
+      set("socketConnected", true);
+      updateConn();
+      refreshAll();
+    });
+    on("socket:disconnect", () => {
+      set("socketConnected", false);
+      updateConn();
+    });
+    on("socket:error", () => updateConn());
+    on("feed:new", (p) => {
+      if (state_default.view === "feed") addPostLive(p.post);
+    });
+    on("presence", (p) => {
+      trackPresence(p);
+      draw();
+      draw3();
+      updateHeaderStatus();
+    });
+    on("message:new", (p) => {
+      upsertConversation(p.conversation);
+      if (isOpen(p.conversation.id)) {
+        appendMessage(p.message);
+        markReadIfActive();
+        resetConversationUnread(p.conversation.id);
+      } else {
+        const name = p.conversation.user.displayName;
+        if (state_default.soundsOn && !document.hasFocus()) playBlip();
+        toast(`New message from ${name}`, "info", 2600);
+        notify("PulseChat Messenger", `New message from ${name}`, `/chat/${p.conversation.id}`);
+      }
+      draw();
+      updateBadges();
+    });
+    on("message:delivered", (p) => {
+      applyMessageDelivered(p.conversationId, p.messageIds, p.at);
+      updateReceipts(p.conversationId);
+      draw();
+    });
+    on("message:read", (p) => {
+      applyMessageRead(p.conversationId, p.byUserId, p.upToMessageId);
+      updateReceipts(p.conversationId);
+      draw();
+      updateBadges();
+    });
+    on("typing", (p) => {
+      if (isOpen(p.conversationId)) showTyping(p.userId);
+    });
+    on("contact:request", (p) => {
+      addIncomingRequest(p.from);
+      updateBadges();
+      if (state_default.view === "people") refresh3();
+      toast(`${p.from.displayName} sent you a friend request`, "info", 3500);
+      notify("PulseChat Messenger", `${p.from.displayName} sent you a friend request`, "/people");
+    });
+    on("contact:accepted", (p) => {
+      addContact({ ...p.contact, relation: "accepted" });
+      if (state_default.view === "people") refresh3();
+      toast(`${p.contact.displayName} accepted your friend request`, "success", 3500);
+      notify("PulseChat Messenger", `${p.contact.displayName} accepted your request`, "/chats");
+    });
+    on("contact:declined", () => {
+      if (state_default.view === "people") refresh3();
+      toast("Your friend request was declined", "info");
+    });
+    on("contact:removed", (p) => {
+      removeContact(p.userId);
+      const conv2 = state_default.conversations.find((c) => c.user.id === p.userId);
+      if (conv2 && isOpen(conv2.id)) closeChat();
+      if (state_default.view === "people") refresh3();
+      draw();
+      updateBadges();
+      toast("A contact was removed", "info");
+    });
+    on("call:incoming", (p) => onIncoming(p));
+    on("call:accepted", (p) => onAccepted(p));
+    on("call:declined", (p) => onDeclined(p));
+    on("call:cancelled", (p) => onCancelled(p));
+    on("call:timeout", (p) => onTimeout(p));
+    on("call:unavailable", (p) => onUnavailable(p));
+    on("call:ended", (p) => onEnded(p));
+    on("call:error", (p) => onCallError(p));
+    on("signal", (p) => onSignal(p));
+    setInterval(() => refreshAuth(), 4 * 60 * 1e3);
+  }
+  boot();
 })();
 </script>
 </body>

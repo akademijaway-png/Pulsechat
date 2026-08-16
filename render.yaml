@@ -1,17 +1,19 @@
-# Render.com blueprint — auto-configures the service when you deploy this repo
+# Render.com blueprint — deploy PulseChat to a permanent public HTTPS URL.
+# See DEPLOY.md for the 10-minute step-by-step.
 services:
   - type: web
-    name: shift-tracker-pro
+    name: pulsechat
     runtime: node
     plan: free
-    buildCommand: npm install
-    startCommand: node server.js
+    buildCommand: npm install --omit=dev && npm rebuild better-sqlite3
+    startCommand: node server/index.js
     healthCheckPath: /api/health
     envVars:
-      - key: NODE_VERSION
-        value: 20
-      # Data persistence: without these two, the free disk wipes on restart!
-      - key: GH_TOKEN      # your fine-grained GitHub token (Contents: Read & write)
-        sync: false
-      - key: GH_REPO       # e.g. yourname/shift-tracker-pro
-        sync: false
+      - key: NODE_ENV
+        value: production
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: PORT
+        value: 10000

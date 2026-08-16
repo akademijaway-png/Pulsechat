@@ -81,7 +81,7 @@ CREATE INDEX IF NOT EXISTS idx_messages_conv ON messages(conversation_id, id);
 CREATE TABLE IF NOT EXISTS media (
   id              INTEGER PRIMARY KEY AUTOINCREMENT,
   filename        TEXT NOT NULL UNIQUE,
-  kind            TEXT NOT NULL CHECK (kind IN ('avatar','message')),
+  kind            TEXT NOT NULL CHECK (kind IN ('avatar','message','post')),
   owner_id        INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   conversation_id INTEGER REFERENCES conversations(id) ON DELETE CASCADE,
   created_at      INTEGER NOT NULL
@@ -110,6 +110,31 @@ CREATE TABLE IF NOT EXISTS calls (
 );
 CREATE INDEX IF NOT EXISTS idx_calls_caller ON calls(caller_id, id);
 CREATE INDEX IF NOT EXISTS idx_calls_callee ON calls(callee_id, id);
+
+CREATE TABLE IF NOT EXISTS posts (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  author_id  INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  body       TEXT NOT NULL,
+  image      TEXT,
+  created_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_posts_created ON posts(created_at DESC);
+
+CREATE TABLE IF NOT EXISTS post_likes (
+  post_id    INTEGER NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+  user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at INTEGER NOT NULL,
+  PRIMARY KEY (post_id, user_id)
+);
+
+CREATE TABLE IF NOT EXISTS post_comments (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  post_id    INTEGER NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+  author_id  INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  body       TEXT NOT NULL,
+  created_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_comments_post ON post_comments(post_id, id);
 `);
 
 // Migration for databases created before client_id existed.

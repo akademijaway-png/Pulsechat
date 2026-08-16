@@ -96,6 +96,9 @@ router.get('/media/:filename', requireAuth, (req, res) => {
       throw errors.forbidden('You do not have access to this file.');
     }
     filePath = path.join(config.messageDir, filename);
+  } else if (media.kind === 'post') {
+    // Feed images are visible to all registered users (like any social feed).
+    filePath = path.join(config.messageDir, filename);
   } else {
     filePath = path.join(config.avatarDir, filename);
   }

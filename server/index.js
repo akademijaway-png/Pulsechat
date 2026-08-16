@@ -28,6 +28,7 @@ const messageRoutes = require('./routes/messages');
 const mediaRoutes = require('./routes/media');
 const callRoutes = require('./routes/calls');
 const pushRoutes = require('./routes/push');
+const feedRoutes = require('./routes/feed');
 const devRoutes = require('./routes/dev');
 const { wipeAllData } = require('./reset');
 
@@ -101,7 +102,7 @@ app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/users', apiLimiter, userRoutes);
 app.use('/api/push', apiLimiter, pushRoutes);
 app.use('/api/dev', apiLimiter, devRoutes);
-app.use('/api', apiLimiter, contactRoutes, messageRoutes, mediaRoutes, callRoutes);
+app.use('/api', apiLimiter, contactRoutes, messageRoutes, mediaRoutes, callRoutes, feedRoutes);
 
 /* ---------------- static frontend ---------------- */
 // The standalone single-file build contains inline scripts, so it needs a

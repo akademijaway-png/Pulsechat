@@ -10,7 +10,9 @@
     "seed:demo": "node scripts/seed-demo.js",
     "build:standalone": "node scripts/build-standalone.js"
   },
-  "engines": { "node": "24.x" },
+  "engines": {
+    "node": "24.x"
+  },
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "better-sqlite3": "^12.11.1",
