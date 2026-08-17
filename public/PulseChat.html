@@ -249,13 +249,6 @@ img { display: block; max-width: 100%; }
 .auth-tabs { display: flex; gap: 6px; background: var(--surface-2); padding: 5px; border-radius: 999px; margin-bottom: 22px; }
 .auth-tabs button { flex: 1; padding: 9px 0; border-radius: 999px; font-size: 14px; font-weight: 600; color: var(--text-dim); transition: all .2s; }
 .auth-tabs button.active { background: var(--gradient); color: #fff; box-shadow: var(--shadow-sm); }
-/* Dev/testing: "start fresh" reset on the login screen */
-.dev-reset {
-  display: flex; align-items: center; justify-content: center; gap: 7px;
-  width: 100%; margin-top: 14px; padding: 9px; border-radius: var(--radius-sm);
-  border: 1px dashed var(--border); color: var(--text-faint);
-  font-size: 12.5px; font-weight: 600; transition: color .2s, border-color .2s, background .2s;
-}
 .dev-reset svg { width: 14px; height: 14px; }
 .dev-reset:hover { color: var(--danger); border-color: var(--danger); background: var(--danger-soft); }
 
@@ -263,23 +256,6 @@ img { display: block; max-width: 100%; }
 .auth-alt a { color: var(--primary); font-weight: 600; text-decoration: none; cursor: pointer; }
 .auth-alt a:hover { text-decoration: underline; }
 
-/* Google sign-in */
-#google-section { margin-bottom: 4px; }
-#google-btn { display: flex; justify-content: center; min-height: 44px; }
-.divider-or {
-  display: flex; align-items: center; gap: 12px; margin: 14px 0 16px;
-  color: var(--text-faint); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em;
-}
-.divider-or::before, .divider-or::after { content: ""; flex: 1; height: 1px; background: var(--border); }
-
-.shell { display: flex; height: 100%; }
-.col-list { width: 100%; display: flex; flex-direction: column; background: var(--bg); position: relative; overflow: hidden; }
-
-/* Animated worm background — faint, always on, behind the content */
-.bg-pulse {
-  position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none;
-  display: flex; align-items: center; justify-content: center;
-}
 .bg-pulse-stage { position: relative; width: 230px; height: 200px; opacity: .8; }
 .bg-pulse-logo {
   width: 108px; height: 108px; border-radius: 30px; position: relative; z-index: 2;
@@ -6889,10 +6865,8 @@ img { display: block; max-width: 100%; }
   // public/js/views/auth.js
   init_api();
   init_ui();
-  init_icons();
   var mode = "login";
   var resetToken = null;
-  var metaCache = null;
   function renderAuth(container6, opts = {}) {
     mode = opts.mode || "login";
     resetToken = opts.token || null;
@@ -6936,9 +6910,6 @@ img { display: block; max-width: 100%; }
     );
     const errorBox = el("div", { id: "auth-error", class: "form-error hidden" });
     body.append(errorBox);
-    if (isLogin || mode === "register") {
-      body.append(googleSection());
-    }
     const form = el("form", { id: "auth-form", onsubmit: (e) => e.preventDefault() });
     form.append(
       el("div", { class: "field" }, [
@@ -6979,110 +6950,10 @@ img { display: block; max-width: 100%; }
         el("a", { text: "Log in", onclick: () => setMode("login") })
       ])
     );
-    initGoogle();
-    initDevReset();
-  }
-  async function initDevReset() {
-    const meta = await loadMeta();
-    if (!meta.allowReset) return;
-    const anchor = document.querySelector(".auth-alt");
-    if (!anchor) return;
-    const btn = el("button", {
-      class: "dev-reset",
-      html: icon("retry") + "<span>Testing? Start fresh \u2014 wipe all data</span>",
-      onclick: async () => {
-        if (!window.confirm("Delete ALL accounts, messages and media? This cannot be undone.")) return;
-        try {
-          const res = await api.post("/dev/reset");
-          toast(res.message || "App reset \u2014 you can now create a new account", "success", 4e3);
-          setTimeout(() => location.reload(), 900);
-        } catch (err) {
-          toast(err.message, "error");
-        }
-      }
-    });
-    anchor.after(btn);
-  }
-  function googleSection() {
-    return el("div", { id: "google-section", class: "hidden" }, [
-      el("div", { id: "google-btn" }),
-      el("div", { class: "divider-or" }, [el("span", { text: "or" })])
-    ]);
-  }
-  function loadGsiScript() {
-    return new Promise((resolve, reject) => {
-      if (window.google && window.google.accounts) return resolve();
-      const s = document.createElement("script");
-      s.src = "https://accounts.google.com/gsi/client";
-      s.async = true;
-      s.onload = resolve;
-      s.onerror = () => reject(new Error("gsi-load-failed"));
-      document.head.appendChild(s);
-    });
-  }
-  async function loadMeta() {
-    if (metaCache) return metaCache;
-    try {
-      metaCache = await api.get("/auth/meta");
-    } catch {
-      metaCache = { google: { enabled: false }, demoAccounts: [] };
-    }
-    return metaCache;
-  }
-  var gsiInitialized = false;
-  async function initGoogle() {
-    const meta = await loadMeta();
-    const section = document.getElementById("google-section");
-    if (!section) return;
-    if (!meta.google || !meta.google.enabled) return;
-    try {
-      await loadGsiScript();
-      if (!gsiInitialized) {
-        window.google.accounts.id.initialize({
-          client_id: meta.google.clientId,
-          callback: handleGoogleCredential,
-          auto_select: false,
-          cancel_on_tap_outside: true
-        });
-        gsiInitialized = true;
-      }
-      window.google.accounts.id.renderButton(document.getElementById("google-btn"), {
-        theme: "outline",
-        size: "large",
-        shape: "pill",
-        text: "continue_with",
-        width: 300,
-        logo_alignment: "left"
-      });
-      section.classList.remove("hidden");
-    } catch {
-      section.classList.add("hidden");
-    }
-  }
-  async function handleGoogleCredential(response) {
-    const errorBox = document.getElementById("auth-error");
-    const showError = (msg) => {
-      if (errorBox) {
-        errorBox.textContent = msg;
-        errorBox.classList.remove("hidden");
-      }
-    };
-    try {
-      const data = await api.post("/auth/google", { credential: response.credential });
-      setSession(data.accessToken, data.refreshToken);
-      toast(`Welcome${data.user.displayName ? ", " + data.user.displayName : ""}! \u{1F389}`, "success");
-      await afterAuthed();
-    } catch (err) {
-      showError(err.message);
-    }
   }
   async function afterAuthed() {
     window.dispatchEvent(new Event("pc:authed"));
     location.hash = "#/chats";
-    await new Promise((r) => setTimeout(r, 2500));
-    if (!document.getElementById("shell") && hasSession()) {
-      toast("Logged in, but the app couldn't finish loading here. Try opening http://localhost:3000 directly.", "error", 6e3);
-    }
   }
   async function submitAuth(e) {
     e.preventDefault();
@@ -7298,7 +7169,7 @@ img { display: block; max-width: 100%; }
     draw3();
   }
   function refresh3() {
-    return Promise.all([loadRequests(), loadContacts()]);
+    return Promise.all([loadRequests(), loadContacts(), loadDiscover()]);
   }
   async function loadRequests() {
     try {
@@ -7327,9 +7198,28 @@ img { display: block; max-width: 100%; }
     return el("div", { class: "fade-swap" }, [
       searchBar(),
       el("div", { id: "search-results" }),
+      el("div", { id: "discover-section" }),
       requestsSection(),
       contactsSection()
     ]);
+  }
+  async function loadDiscover() {
+    const box = container3.querySelector("#discover-section");
+    if (!box) return;
+    try {
+      const data = await api.get("/users/discover");
+      const others = data.users.filter((u) => u.relation !== "accepted" && u.relation !== "self");
+      if (!others.length) {
+        box.replaceChildren();
+        return;
+      }
+      box.replaceChildren(
+        el("div", { class: "section-title", text: "Registered on PulseChat" }),
+        ...others.slice(0, 8).map(userRow)
+      );
+    } catch {
+      box.replaceChildren();
+    }
   }
   function searchBar() {
     return el("div", { class: "search-bar" }, [
@@ -7347,10 +7237,13 @@ img { display: block; max-width: 100%; }
   async function runSearch(q) {
     const resultsBox = container3.querySelector("#search-results");
     const query = q.trim();
+    const discover = container3.querySelector("#discover-section");
     if (query.length < 2) {
       resultsBox.replaceChildren();
+      if (discover) discover.style.display = "";
       return;
     }
+    if (discover) discover.style.display = "none";
     lastQuery = query;
     resultsBox.replaceChildren(el("div", { class: "skeleton", style: "height:64px;margin:8px 0" }));
     try {

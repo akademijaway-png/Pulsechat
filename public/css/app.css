@@ -240,13 +240,6 @@ img { display: block; max-width: 100%; }
 .auth-tabs { display: flex; gap: 6px; background: var(--surface-2); padding: 5px; border-radius: 999px; margin-bottom: 22px; }
 .auth-tabs button { flex: 1; padding: 9px 0; border-radius: 999px; font-size: 14px; font-weight: 600; color: var(--text-dim); transition: all .2s; }
 .auth-tabs button.active { background: var(--gradient); color: #fff; box-shadow: var(--shadow-sm); }
-/* Dev/testing: "start fresh" reset on the login screen */
-.dev-reset {
-  display: flex; align-items: center; justify-content: center; gap: 7px;
-  width: 100%; margin-top: 14px; padding: 9px; border-radius: var(--radius-sm);
-  border: 1px dashed var(--border); color: var(--text-faint);
-  font-size: 12.5px; font-weight: 600; transition: color .2s, border-color .2s, background .2s;
-}
 .dev-reset svg { width: 14px; height: 14px; }
 .dev-reset:hover { color: var(--danger); border-color: var(--danger); background: var(--danger-soft); }
 
@@ -254,23 +247,6 @@ img { display: block; max-width: 100%; }
 .auth-alt a { color: var(--primary); font-weight: 600; text-decoration: none; cursor: pointer; }
 .auth-alt a:hover { text-decoration: underline; }
 
-/* Google sign-in */
-#google-section { margin-bottom: 4px; }
-#google-btn { display: flex; justify-content: center; min-height: 44px; }
-.divider-or {
-  display: flex; align-items: center; gap: 12px; margin: 14px 0 16px;
-  color: var(--text-faint); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em;
-}
-.divider-or::before, .divider-or::after { content: ""; flex: 1; height: 1px; background: var(--border); }
-
-.shell { display: flex; height: 100%; }
-.col-list { width: 100%; display: flex; flex-direction: column; background: var(--bg); position: relative; overflow: hidden; }
-
-/* Animated worm background — faint, always on, behind the content */
-.bg-pulse {
-  position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none;
-  display: flex; align-items: center; justify-content: center;
-}
 .bg-pulse-stage { position: relative; width: 230px; height: 200px; opacity: .8; }
 .bg-pulse-logo {
   width: 108px; height: 108px; border-radius: 30px; position: relative; z-index: 2;

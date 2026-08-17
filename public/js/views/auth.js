@@ -1,9 +1,8 @@
 'use strict';
 /* Login / register / forgot-password / reset-password views. */
 
-import { api, setSession, hasSession } from '../api.js';
+import { api, setSession } from '../api.js';
 import { el, toast } from '../ui.js';
-import { icon } from '../icons.js';
 
 let mode = 'login'; // login | register | forgot | reset
 let resetToken = null;
@@ -61,11 +60,6 @@ function renderLoginRegister(body) {
   const errorBox = el('div', { id: 'auth-error', class: 'form-error hidden' });
   body.append(errorBox);
 
-  // Google sign-in (only for login / register modes)
-  if (isLogin || mode === 'register') {
-    body.append(googleSection());
-  }
-
   const form = el('form', { id: 'auth-form', onsubmit: (e) => e.preventDefault() });
   form.append(
     el('div', { class: 'field' }, [
@@ -110,54 +104,10 @@ function renderLoginRegister(body) {
         ])
   );
 
-  initGoogle();
-  initDevReset();
 }
 
-/* ---------------- dev/testing: start fresh ---------------- */
 
-/** When the server runs with ALLOW_RESET=1, offer a one-tap reset so testing
- *  always starts from a blank database (no stale accounts blocking signup). */
-async function initDevReset() {
-  const meta = await loadMeta();
-  if (!meta.allowReset) return;
-  const anchor = document.querySelector('.auth-alt');
-  if (!anchor) return;
-  const btn = el('button', {
-    class: 'dev-reset',
-    html: icon('retry') + '<span>Testing? Start fresh — wipe all data</span>',
-    onclick: async () => {
-      if (!window.confirm('Delete ALL accounts, messages and media? This cannot be undone.')) return;
-      try {
-        const res = await api.post('/dev/reset');
-        toast(res.message || 'App reset — you can now create a new account', 'success', 4000);
-        setTimeout(() => location.reload(), 900);
-      } catch (err) {
-        toast(err.message, 'error');
-      }
-    },
-  });
-  anchor.after(btn);
-}
 
-function googleSection() {
-  return el('div', { id: 'google-section', class: 'hidden' }, [
-    el('div', { id: 'google-btn' }),
-    el('div', { class: 'divider-or' }, [el('span', { text: 'or' })]),
-  ]);
-}
-
-function loadGsiScript() {
-  return new Promise((resolve, reject) => {
-    if (window.google && window.google.accounts) return resolve();
-    const s = document.createElement('script');
-    s.src = 'https://accounts.google.com/gsi/client';
-    s.async = true;
-    s.onload = resolve;
-    s.onerror = () => reject(new Error('gsi-load-failed'));
-    document.head.appendChild(s);
-  });
-}
 
 async function loadMeta() {
   if (metaCache) return metaCache;
@@ -169,68 +119,14 @@ async function loadMeta() {
   return metaCache;
 }
 
-let gsiInitialized = false;
 
-async function initGoogle() {
-  const meta = await loadMeta();
-  const section = document.getElementById('google-section');
-  if (!section) return;
-  if (!meta.google || !meta.google.enabled) return; // not configured — stay hidden
-
-  try {
-    await loadGsiScript();
-    if (!gsiInitialized) {
-      window.google.accounts.id.initialize({
-        client_id: meta.google.clientId,
-        callback: handleGoogleCredential,
-        auto_select: false,
-        cancel_on_tap_outside: true,
-      });
-      gsiInitialized = true;
-    }
-    window.google.accounts.id.renderButton(document.getElementById('google-btn'), {
-      theme: 'outline',
-      size: 'large',
-      shape: 'pill',
-      text: 'continue_with',
-      width: 300,
-      logo_alignment: 'left',
-    });
-    section.classList.remove('hidden');
-  } catch {
-    // Google's script couldn't load here (e.g. offline or sandboxed preview).
-    // Keep the screen clean — the email/password form below is unaffected.
-    section.classList.add('hidden');
-  }
-}
-
-async function handleGoogleCredential(response) {
-  const errorBox = document.getElementById('auth-error');
-  const showError = (msg) => {
-    if (errorBox) {
-      errorBox.textContent = msg;
-      errorBox.classList.remove('hidden');
-    }
-  };
-  try {
-    const data = await api.post('/auth/google', { credential: response.credential });
-    setSession(data.accessToken, data.refreshToken);
-    toast(`Welcome${data.user.displayName ? ', ' + data.user.displayName : ''}! 🎉`, 'success');
-    await afterAuthed();
-  } catch (err) {
-    showError(err.message);
-  }
-}
 
 /** Shared post-auth navigation with a visible failsafe (no silent failures). */
+
+/** Post-login navigation. */
 async function afterAuthed() {
   window.dispatchEvent(new Event('pc:authed'));
   location.hash = '#/chats';
-  // If the app shell still hasn't appeared shortly after, surface the problem.
-  await new Promise((r) => setTimeout(r, 2500));
-  if (!document.getElementById('shell') && hasSession()) {
-    toast('Logged in, but the app couldn\'t finish loading here. Try opening http://localhost:3000 directly.', 'error', 6000);
-  }
 }
 
 async function submitAuth(e) {
