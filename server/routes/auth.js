@@ -26,12 +26,12 @@ const { sendResetEmail } = require('../mailer');
 
 const router = express.Router();
 
-function tokenPair(userId, device) {
-  return { accessToken: signAccessToken({ id: userId }), refreshToken: issueRefreshToken(userId, device) };
+async function tokenPair(userId, device) {
+  return { accessToken: signAccessToken({ id: userId }), refreshToken: await issueRefreshToken(userId, device) };
 }
 
-function findUserByEmail(email) {
-  return db.prepare(`SELECT * FROM users WHERE email = ? COLLATE NOCASE`).get(email.trim());
+async function findUserByEmail(email) {
+  return await db.prepare(`SELECT * FROM users WHERE LOWER(email) = LOWER(?)`).get(email.trim());
 }
 
 /* ---------------- sign-in with Google (Gmail) ---------------- */
@@ -43,7 +43,7 @@ if (config.google.clientId) {
 }
 
 /** Public app metadata: whether Google sign-in is on, and demo logins (dev). */
-router.get('/meta', (req, res) => {
+router.get('/meta', async (req, res) => {
   res.json({
     google: { enabled: !!config.google.clientId, clientId: config.google.clientId },
     demoAccounts: config.demoAccounts,
@@ -92,27 +92,27 @@ router.post(
       }
 
       const email = payload.email.toLowerCase();
-      let user = findUserByEmail(email);
+      let user = await findUserByEmail(email);
       if (!user) {
         // New account, created from the Google profile.
         const displayName = (payload.name || email.split('@')[0] || 'PulseChat user')
           .trim()
           .slice(0, config.displayNameMaxLength);
         const avatar = await saveGooglePicture(payload.picture);
-        const info = db
+        const info = await db
           .prepare(
             `INSERT INTO users (email, password_hash, display_name, bio, created_at, avatar)
              VALUES (?, '', ?, '', ?, ?)`
           )
           .run(email, displayName, now(), avatar);
-        user = db.prepare(`SELECT * FROM users WHERE id = ?`).get(info.lastInsertRowid);
+        user = await db.prepare(`SELECT * FROM users WHERE id = ?`).get(info.lastInsertRowid);
       } else if (!user.avatar && payload.picture) {
         // Backfill a profile picture for existing accounts that don't have one.
         const avatar = await saveGooglePicture(payload.picture);
-        if (avatar) db.prepare(`UPDATE users SET avatar = ? WHERE id = ?`).run(avatar, user.id);
+        if (avatar) await db.prepare(`UPDATE users SET avatar = ? WHERE id = ?`).run(avatar, user.id);
       }
 
-      const pair = tokenPair(user.id, req.headers['user-agent'] || 'web');
+      const pair = await tokenPair(user.id, req.headers['user-agent'] || 'web');
       res.json({ user: publicUser(user), ...pair, googleAccount: true });
     } catch (err) {
       if (err instanceof HttpError) return next(err);
@@ -131,23 +131,23 @@ router.post(
     password: { type: 'string', required: true, label: 'Password', max: 128 },
     displayName: { type: 'string', required: true, label: 'Display name', min: 2, max: config.displayNameMaxLength },
   }),
-  (req, res) => {
+  async (req, res) => {
     const { email, password, displayName } = req.valid;
 
     const pwIssue = passwordIssue(password);
     if (pwIssue) throw errors.unprocessable(pwIssue, { field: 'password' });
 
-    if (findUserByEmail(email)) {
+    if (await findUserByEmail(email)) {
       throw errors.conflict('An account with this email already exists. Try logging in instead.');
     }
 
     const t = now();
-    const info = db
+    const info = await db
       .prepare(`INSERT INTO users (email, password_hash, display_name, bio, created_at) VALUES (?, ?, ?, '', ?)`)
       .run(email.trim().toLowerCase(), hashPassword(password), displayName, t);
 
-    const user = db.prepare(`SELECT * FROM users WHERE id = ?`).get(info.lastInsertRowid);
-    const pair = tokenPair(user.id, req.headers['user-agent'] || 'web');
+    const user = await db.prepare(`SELECT * FROM users WHERE id = ?`).get(info.lastInsertRowid);
+    const pair = await tokenPair(user.id, req.headers['user-agent'] || 'web');
     res.status(201).json({ user: publicUser(user), ...pair });
   }
 );
@@ -160,14 +160,21 @@ router.post(
     email: { type: 'string', required: true, label: 'Email', max: 254 },
     password: { type: 'string', required: true, label: 'Password', max: 128 },
   }),
-  (req, res) => {
-    const user = findUserByEmail(req.valid.email);
-    // Google-only accounts have no password stored; they sign in via Google.
-    const ok = user && user.password_hash && verifyPassword(req.valid.password, user.password_hash);
-    if (!ok) {
-      throw errors.unauthorized('Invalid email or password. Please try again.');
+  async (req, res) => {
+    const user = await findUserByEmail(req.valid.email);
+    if (!user) {
+      // No account with this email — tell them, don't guess.
+      throw errors.unauthorized("No account found with this email. Tap \"Create account\" to register.");
     }
-    const pair = tokenPair(user.id, req.headers['user-agent'] || 'web');
+    if (!user.password_hash) {
+      // Google-only account — email+password can never work for it.
+      throw errors.unauthorized('This email uses Google sign-in. Tap "Continue with Google" to log in.');
+    }
+    const ok = verifyPassword(req.valid.password, user.password_hash);
+    if (!ok) {
+      throw errors.unauthorized('Incorrect password. If you forgot it, use "Reset it" below.');
+    }
+    const pair = await tokenPair(user.id, req.headers['user-agent'] || 'web');
     res.json({ user: publicUser(user), ...pair });
   }
 );
@@ -177,12 +184,12 @@ router.post(
 router.post(
   '/refresh',
   validateBody({ refreshToken: { type: 'string', required: true, label: 'Refresh token', min: 20, max: 512 } }),
-  (req, res) => {
-    const rotated = rotateRefreshToken(req.valid.refreshToken, req.headers['user-agent'] || 'web');
+  async (req, res) => {
+    const rotated = await rotateRefreshToken(req.valid.refreshToken, req.headers['user-agent'] || 'web');
     if (!rotated) {
       throw errors.unauthorized('Your session has expired. Please log in again.');
     }
-    const user = db.prepare(`SELECT * FROM users WHERE id = ?`).get(rotated.userId);
+    const user = await db.prepare(`SELECT * FROM users WHERE id = ?`).get(rotated.userId);
     if (!user) throw errors.unauthorized('Your session has expired. Please log in again.');
     res.json({ accessToken: signAccessToken({ id: user.id }), refreshToken: rotated.raw });
   }
@@ -193,16 +200,16 @@ router.post(
 router.post(
   '/logout',
   validateBody({ refreshToken: { type: 'string', required: true, label: 'Refresh token', min: 20, max: 512 } }),
-  (req, res) => {
-    revokeRefreshToken(req.valid.refreshToken);
+  async (req, res) => {
+    await revokeRefreshToken(req.valid.refreshToken);
     res.json({ ok: true });
   }
 );
 
 /* ---------------- me ---------------- */
 
-router.get('/me', requireAuth, (req, res) => {
-  const user = db.prepare(`SELECT * FROM users WHERE id = ?`).get(req.user.id);
+router.get('/me', requireAuth, async (req, res) => {
+  const user = await db.prepare(`SELECT * FROM users WHERE id = ?`).get(req.user.id);
   if (!user) throw errors.notFound('Account not found.');
   res.json({ user: publicUser(user) });
 });
@@ -216,17 +223,17 @@ router.patch(
     displayName: { type: 'string', required: false, label: 'Display name', min: 2, max: config.displayNameMaxLength },
     bio: { type: 'string', required: false, label: 'Bio', max: config.bioMaxLength },
   }),
-  (req, res) => {
+  async (req, res) => {
     const fields = req.valid;
     if (!fields.displayName && fields.bio === undefined) {
       throw errors.badRequest('Nothing to update.');
     }
-    const user = db.prepare(`SELECT * FROM users WHERE id = ?`).get(req.user.id);
+    const user = await db.prepare(`SELECT * FROM users WHERE id = ?`).get(req.user.id);
     if (!user) throw errors.notFound('Account not found.');
     const newName = fields.displayName !== undefined ? fields.displayName : user.display_name;
     const newBio = fields.bio !== undefined ? fields.bio : user.bio;
-    db.prepare(`UPDATE users SET display_name = ?, bio = ? WHERE id = ?`).run(newName, newBio, req.user.id);
-    const updated = db.prepare(`SELECT * FROM users WHERE id = ?`).get(req.user.id);
+    await db.prepare(`UPDATE users SET display_name = ?, bio = ? WHERE id = ?`).run(newName, newBio, req.user.id);
+    const updated = await db.prepare(`SELECT * FROM users WHERE id = ?`).get(req.user.id);
     res.json({ user: publicUser(updated) });
   }
 );
@@ -240,8 +247,8 @@ router.post(
     currentPassword: { type: 'string', required: true, label: 'Current password', max: 128 },
     newPassword: { type: 'string', required: true, label: 'New password', max: 128 },
   }),
-  (req, res) => {
-    const user = db.prepare(`SELECT * FROM users WHERE id = ?`).get(req.user.id);
+  async (req, res) => {
+    const user = await db.prepare(`SELECT * FROM users WHERE id = ?`).get(req.user.id);
     if (!verifyPassword(req.valid.currentPassword, user.password_hash)) {
       throw errors.unauthorized('Your current password is incorrect.');
     }
@@ -250,21 +257,21 @@ router.post(
     if (req.valid.newPassword === req.valid.currentPassword) {
       throw errors.unprocessable('New password must be different from the current one.');
     }
-    db.prepare(`UPDATE users SET password_hash = ? WHERE id = ?`).run(hashPassword(req.valid.newPassword), req.user.id);
-    revokeAllRefreshTokens(req.user.id);
+    await db.prepare(`UPDATE users SET password_hash = ? WHERE id = ?`).run(hashPassword(req.valid.newPassword), req.user.id);
+    await revokeAllRefreshTokens(req.user.id);
     res.json({ ok: true });
   }
 );
 
 /* ---------------- avatar ---------------- */
 
-router.post('/avatar', requireAuth, imageUpload(config.uploads.avatarMaxBytes), (req, res) => {
+router.post('/avatar', requireAuth, imageUpload(config.uploads.avatarMaxBytes), async (req, res) => {
   const saved = saveImageFile(req.file, config.avatarDir);
-  const user = db.prepare(`SELECT * FROM users WHERE id = ?`).get(req.user.id);
+  const user = await db.prepare(`SELECT * FROM users WHERE id = ?`).get(req.user.id);
   const oldAvatar = user.avatar;
   const avatarUrl = `/uploads/avatars/${saved.filename}`;
-  db.prepare(`UPDATE users SET avatar = ? WHERE id = ?`).run(avatarUrl, req.user.id);
-  db.prepare(`INSERT INTO media (filename, kind, owner_id, created_at) VALUES (?, 'avatar', ?, ?)`).run(
+  await db.prepare(`UPDATE users SET avatar = ? WHERE id = ?`).run(avatarUrl, req.user.id);
+  await db.prepare(`INSERT INTO media (filename, kind, owner_id, created_at) VALUES (?, 'avatar', ?, ?)`).run(
     saved.filename,
     req.user.id,
     now()
@@ -272,7 +279,7 @@ router.post('/avatar', requireAuth, imageUpload(config.uploads.avatarMaxBytes), 
   if (oldAvatar && oldAvatar.startsWith('/uploads/avatars/')) {
     deleteFileIfExists(require('path').join(config.avatarDir, oldAvatar.split('/').pop()));
   }
-  const updated = db.prepare(`SELECT * FROM users WHERE id = ?`).get(req.user.id);
+  const updated = await db.prepare(`SELECT * FROM users WHERE id = ?`).get(req.user.id);
   res.json({ user: publicUser(updated) });
 });
 
@@ -285,12 +292,12 @@ router.post(
     const email = req.valid.email.trim().toLowerCase();
     if (!isEmail(email)) throw errors.unprocessable('Please enter a valid email address.');
 
-    const user = findUserByEmail(email);
+    const user = await findUserByEmail(email);
     if (user) {
       const raw = require('crypto').randomBytes(32).toString('hex');
       const tokenHash = require('crypto').createHash('sha256').update(raw).digest('hex');
       const ttl = 30 * 60 * 1000;
-      db.prepare(`INSERT INTO password_resets (id, user_id, created_at, expires_at) VALUES (?, ?, ?, ?)`).run(
+      await db.prepare(`INSERT INTO password_resets (id, user_id, created_at, expires_at) VALUES (?, ?, ?, ?)`).run(
         tokenHash,
         user.id,
         now(),
@@ -317,17 +324,17 @@ router.post(
     token: { type: 'string', required: true, label: 'Reset token', min: 20, max: 512 },
     newPassword: { type: 'string', required: true, label: 'New password', max: 128 },
   }),
-  (req, res) => {
+  async (req, res) => {
     const issue = passwordIssue(req.valid.newPassword);
     if (issue) throw errors.unprocessable(issue, { field: 'newPassword' });
     const tokenHash = require('crypto').createHash('sha256').update(req.valid.token).digest('hex');
-    const row = db.prepare(`SELECT * FROM password_resets WHERE id = ?`).get(tokenHash);
+    const row = await db.prepare(`SELECT * FROM password_resets WHERE id = ?`).get(tokenHash);
     if (!row || row.used_at || row.expires_at < now()) {
       throw errors.badRequest('This reset link is invalid or has expired. Please request a new one.');
     }
-    db.prepare(`UPDATE users SET password_hash = ? WHERE id = ?`).run(hashPassword(req.valid.newPassword), row.user_id);
-    db.prepare(`UPDATE password_resets SET used_at = ? WHERE id = ?`).run(now(), tokenHash);
-    revokeAllRefreshTokens(row.user_id);
+    await db.prepare(`UPDATE users SET password_hash = ? WHERE id = ?`).run(hashPassword(req.valid.newPassword), row.user_id);
+    await db.prepare(`UPDATE password_resets SET used_at = ? WHERE id = ?`).run(now(), tokenHash);
+    await revokeAllRefreshTokens(row.user_id);
     res.json({ ok: true, message: 'Your password has been reset. You can now log in.' });
   }
 );

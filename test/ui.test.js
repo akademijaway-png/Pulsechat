@@ -232,7 +232,17 @@ async function main() {
   bob2.on('pageerror', (e) => errors.b.push(e.message));
   await bob2.goto(BASE, { waitUntil: 'networkidle2' });
   await bob2.waitForSelector('#shell', { timeout: 10000 }); // persisted session — auto-logged-in
-  await sleep(1200);
+  await sleep(2500); // wait for socket to register so Alice sees Bob online
+
+  // wait until Alice's UI reflects Bob online before calling
+  await alice
+    .waitForFunction(() => {
+      const items = Array.from(document.querySelectorAll('.conv-item'));
+      const item = items.find((n) => n.textContent.includes('UI Bob'));
+      return item && item.querySelector('.dot-online');
+    }, { timeout: 8000 })
+    .catch(() => {});
+  await sleep(300);
 
   await alice.evaluate(() => document.querySelector('.chat-header .icon-btn[title*="video"]').click());
   await alice.waitForSelector('.call-screen', { timeout: 6000 });

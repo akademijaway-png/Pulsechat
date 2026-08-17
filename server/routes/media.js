@@ -26,7 +26,7 @@ router.post(
   '/media/upload',
   requireAuth,
   imageUpload(config.uploads.messageMaxBytes),
-  (req, res) => {
+  async (req, res) => {
     const me = req.user.id;
     const purpose = typeof req.body.purpose === 'string' ? req.body.purpose : '';
     const convId = Number(req.body.conversationId);
@@ -37,19 +37,19 @@ router.post(
       if (builtin) {
         const av = config.builtinAvatars.find((a) => a.id === builtin);
         if (!av) throw errors.badRequest('Unknown avatar choice.');
-        const user = db.prepare(`SELECT * FROM users WHERE id = ?`).get(me);
+        const user = await db.prepare(`SELECT * FROM users WHERE id = ?`).get(me);
         const oldAvatar = user.avatar;
-        db.prepare(`UPDATE users SET avatar = ? WHERE id = ?`).run(av.url, me);
+        await db.prepare(`UPDATE users SET avatar = ? WHERE id = ?`).run(av.url, me);
         if (oldAvatar && oldAvatar.startsWith('/uploads/avatars/')) {
           deleteFileIfExists(path.join(config.avatarDir, path.basename(oldAvatar)));
         }
         return res.status(200).json({ url: av.url, kind: 'avatar', builtin: true });
       }
       const saved = saveImageFile(req.file, config.avatarDir);
-      const user = db.prepare(`SELECT * FROM users WHERE id = ?`).get(me);
+      const user = await db.prepare(`SELECT * FROM users WHERE id = ?`).get(me);
       const oldAvatar = user.avatar;
-      db.prepare(`UPDATE users SET avatar = ? WHERE id = ?`).run(`/uploads/avatars/${saved.filename}`, me);
-      db.prepare(`INSERT INTO media (filename, kind, owner_id, created_at) VALUES (?, 'avatar', ?, ?)`).run(
+      await db.prepare(`UPDATE users SET avatar = ? WHERE id = ?`).run(`/uploads/avatars/${saved.filename}`, me);
+      await db.prepare(`INSERT INTO media (filename, kind, owner_id, created_at) VALUES (?, 'avatar', ?, ?)`).run(
         saved.filename,
         me,
         now()
@@ -66,13 +66,13 @@ router.post(
     if (!Number.isInteger(convId) || convId <= 0) {
       throw errors.badRequest('conversationId is required for message media.');
     }
-    const conv = db.prepare(`SELECT * FROM conversations WHERE id = ?`).get(convId);
+    const conv = await db.prepare(`SELECT * FROM conversations WHERE id = ?`).get(convId);
     if (!conv || (conv.user_a !== me && conv.user_b !== me)) {
       throw errors.forbidden('You do not have access to this conversation.');
     }
 
     const saved = saveImageFile(req.file, config.messageDir);
-    db.prepare(
+    await db.prepare(
       `INSERT INTO media (filename, kind, owner_id, conversation_id, created_at) VALUES (?, 'message', ?, ?, ?)`
     ).run(saved.filename, me, convId, now());
 
@@ -82,16 +82,16 @@ router.post(
 
 /* ---------------- access-controlled download ---------------- */
 
-router.get('/media/:filename', requireAuth, (req, res) => {
+router.get('/media/:filename', requireAuth, async (req, res) => {
   const filename = req.params.filename;
   if (!SAFE_NAME.test(filename)) throw errors.badRequest('Invalid file name.');
 
-  const media = db.prepare(`SELECT * FROM media WHERE filename = ?`).get(filename);
+  const media = await db.prepare(`SELECT * FROM media WHERE filename = ?`).get(filename);
   if (!media) throw errors.notFound('File not found.');
 
   let filePath;
   if (media.kind === 'message') {
-    const conv = db.prepare(`SELECT * FROM conversations WHERE id = ?`).get(media.conversation_id);
+    const conv = await db.prepare(`SELECT * FROM conversations WHERE id = ?`).get(media.conversation_id);
     if (!conv || (conv.user_a !== req.user.id && conv.user_b !== req.user.id)) {
       throw errors.forbidden('You do not have access to this file.');
     }

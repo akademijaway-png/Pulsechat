@@ -48,7 +48,7 @@ function getPublicKey() {
 async function sendToUser(userId, payload) {
   if (isOnline(userId)) return 0;
   ensureKeys();
-  const subs = db
+  const subs = await db
     .prepare(`SELECT endpoint, p256dh, auth FROM push_subscriptions WHERE user_id = ?`)
     .all(userId);
   if (subs.length === 0) return 0;
@@ -61,7 +61,7 @@ async function sendToUser(userId, payload) {
     } catch (err) {
       if (err.statusCode === 404 || err.statusCode === 410) {
         // Subscription expired / no longer valid — drop it.
-        db.prepare(`DELETE FROM push_subscriptions WHERE endpoint = ?`).run(sub.endpoint);
+        await db.prepare(`DELETE FROM push_subscriptions WHERE endpoint = ?`).run(sub.endpoint);
       } else {
         console.error('[push] delivery failed:', err.statusCode || '', err.message);
       }

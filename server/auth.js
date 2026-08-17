@@ -42,10 +42,10 @@ function hashToken(raw) {
   return crypto.createHash('sha256').update(raw).digest('hex');
 }
 
-function issueRefreshToken(userId, device) {
+async function issueRefreshToken(userId, device) {
   const raw = newRefreshTokenRaw();
   const ttlMs = config.jwt.refreshTtlDays * 24 * 60 * 60 * 1000;
-  db.prepare(
+  await db.prepare(
     `INSERT INTO refresh_tokens (id, user_id, device, created_at, expires_at)
      VALUES (?, ?, ?, ?, ?)`
   ).run(hashToken(raw), userId, device || 'web', now(), now() + ttlMs);
@@ -56,9 +56,9 @@ function issueRefreshToken(userId, device) {
  * Validate + rotate a refresh token. Returns { userId, raw } for the new pair
  * or null when the token is unknown, expired, or already replaced.
  */
-function rotateRefreshToken(rawToken, device) {
+async function rotateRefreshToken(rawToken, device) {
   const id = hashToken(rawToken);
-  const row = db.prepare(
+  const row = await db.prepare(
     `SELECT id, user_id, expires_at, replaced_by FROM refresh_tokens WHERE id = ?`
   ).get(id);
   if (!row) return null;
@@ -67,28 +67,28 @@ function rotateRefreshToken(rawToken, device) {
     revokeTokenChain(row.user_id, row.id);
     return null;
   }
-  db.prepare(`DELETE FROM refresh_tokens WHERE id = ?`).run(id);
-  const raw = issueRefreshToken(row.user_id, device);
+  await db.prepare(`DELETE FROM refresh_tokens WHERE id = ?`).run(id);
+  const raw = await issueRefreshToken(row.user_id, device);
   return { userId: row.user_id, raw };
 }
 
-function revokeRefreshToken(rawToken) {
+async function revokeRefreshToken(rawToken) {
   if (!rawToken) return;
-  db.prepare(`DELETE FROM refresh_tokens WHERE id = ?`).run(hashToken(rawToken));
+  await db.prepare(`DELETE FROM refresh_tokens WHERE id = ?`).run(hashToken(rawToken));
 }
 
-function revokeAllRefreshTokens(userId) {
-  db.prepare(`DELETE FROM refresh_tokens WHERE user_id = ?`).run(userId);
+async function revokeAllRefreshTokens(userId) {
+  await db.prepare(`DELETE FROM refresh_tokens WHERE user_id = ?`).run(userId);
 }
 
 /** Delete the token + everything that replaced it (used when reuse is detected). */
-function revokeTokenChain(userId, firstId) {
-  const q = db.prepare(`SELECT id, replaced_by FROM refresh_tokens WHERE user_id = ?`);
-  const del = db.prepare(`DELETE FROM refresh_tokens WHERE id = ?`);
+async function revokeTokenChain(userId, firstId) {
+  const q = await db.prepare(`SELECT id, replaced_by FROM refresh_tokens WHERE user_id = ?`);
+  const del = await db.prepare(`DELETE FROM refresh_tokens WHERE id = ?`);
   const seen = new Set([firstId]);
   let cur = firstId;
   while (cur) {
-    const row = q.get(userId) && db.prepare(`SELECT id, replaced_by FROM refresh_tokens WHERE id = ?`).get(cur);
+    const row = q.get(userId) && await db.prepare(`SELECT id, replaced_by FROM refresh_tokens WHERE id = ?`).get(cur);
     if (!row) break;
     del.run(row.id);
     if (row.replaced_by && !seen.has(row.replaced_by)) {

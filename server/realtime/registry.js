@@ -77,8 +77,8 @@ function emitToAll(event, payload) {
   return 1;
 }
 
-function userExists(userId) {
-  return !!db.prepare(`SELECT id FROM users WHERE id = ?`).get(userId);
+async function userExists(userId) {
+  return !!await db.prepare(`SELECT id FROM users WHERE id = ?`).get(userId);
 }
 
 module.exports = {

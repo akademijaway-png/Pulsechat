@@ -32,12 +32,6 @@ const feedRoutes = require('./routes/feed');
 const devRoutes = require('./routes/dev');
 const { wipeAllData } = require('./reset');
 
-// Optional: start every boot from a blank database (testing only).
-if (config.resetDbOnStart) {
-  wipeAllData();
-  console.log('[dev] RESET_DB_ON_START — all data wiped at boot.');
-}
-
 const app = express();
 app.disable('x-powered-by');
 
@@ -176,16 +170,16 @@ function clearCallTimer(callId) {
   }
 }
 
-function getCall(callId) {
-  return db.prepare(`SELECT * FROM calls WHERE id = ?`).get(callId);
+async function getCall(callId) {
+  return await db.prepare(`SELECT * FROM calls WHERE id = ?`).get(callId);
 }
 
 /** Resolve a call by numeric db id, or by the caller's client-generated id. */
-function findCallRow(data) {
+async function findCallRow(data) {
   const num = Number(data && data.callId);
-  if (Number.isInteger(num) && num > 0) return getCall(num);
+  if (Number.isInteger(num) && num > 0) return await getCall(num);
   const cid = data && typeof data.clientId === 'string' ? data.clientId : null;
-  if (cid && cid.length <= 64) return db.prepare(`SELECT * FROM calls WHERE client_id = ?`).get(cid);
+  if (cid && cid.length <= 64) return await db.prepare(`SELECT * FROM calls WHERE client_id = ?`).get(cid);
   return null;
 }
 
@@ -202,7 +196,7 @@ function callClientId(call) {
 function registerCallHandlers(socket) {
   const userId = socket.data.userId;
 
-  socket.on('call:invite', (data) => {
+  socket.on('call:invite', async (data) => {
     const to = Number(data && data.to);
     const clientId = data && typeof data.clientId === 'string' ? data.clientId : null;
     if (!Number.isInteger(to) || to <= 0 || to === userId) {
@@ -211,22 +205,22 @@ function registerCallHandlers(socket) {
     if (clientId && clientId.length > 64) {
       return socket.emit('call:error', { message: 'Invalid call request.' });
     }
-    const target = db.prepare(`SELECT * FROM users WHERE id = ?`).get(to);
+    const target = await db.prepare(`SELECT * FROM users WHERE id = ?`).get(to);
     if (!target) return socket.emit('call:error', { message: 'This user does not exist.' });
     if (!registry.isOnline(to)) {
-      const missed = db
+      const missed = await db
         .prepare(`INSERT INTO calls (caller_id, callee_id, kind, status, initiated_at, ended_at, client_id) VALUES (?, ?, 'video', 'missed', ?, ?, ?)`)
         .run(userId, to, now(), now(), clientId);
       return socket.emit('call:unavailable', { callId: missed.lastInsertRowid, clientId, calleeId: to });
     }
     // Only contacts can call each other.
-    const relation = db
+    const relation = await db
       .prepare(`SELECT 1 FROM contacts WHERE ((user_id = ? AND contact_id = ?) OR (user_id = ? AND contact_id = ?)) AND status = 'accepted'`)
       .get(userId, to, to, userId);
     if (!relation) {
       return socket.emit('call:error', { message: 'You can only call your contacts.' });
     }
-    const info = db
+    const info = await db
       .prepare(`INSERT INTO calls (caller_id, callee_id, kind, status, initiated_at, client_id) VALUES (?, ?, 'video', 'ringing', ?, ?)`)
       .run(userId, to, now(), clientId);
     const callIdDb = info.lastInsertRowid;
@@ -234,14 +228,14 @@ function registerCallHandlers(socket) {
     registry.emitToUser(to, 'call:incoming', {
       callId: callIdDb,
       clientId,
-      caller: userSummary(db.prepare(`SELECT * FROM users WHERE id = ?`).get(userId), to),
+      caller: await userSummary(await db.prepare(`SELECT * FROM users WHERE id = ?`).get(userId), to),
     });
     pushNotifyCall(to, `${target.display_name}`);
 
-    callTimers.set(callIdDb, setTimeout(() => {
-      const call = getCall(callIdDb);
+    callTimers.set(callIdDb, setTimeout(async () => {
+      const call = await getCall(callIdDb);
       if (call && call.status === 'ringing') {
-        db.prepare(`UPDATE calls SET status = 'missed', ended_at = ? WHERE id = ?`).run(now(), callIdDb);
+        await db.prepare(`UPDATE calls SET status = 'missed', ended_at = ? WHERE id = ?`).run(now(), callIdDb);
         registry.emitToUser(userId, 'call:timeout', { callId: callIdDb, clientId: callClientId(call) });
         registry.emitToUser(to, 'call:timeout', { callId: callIdDb, clientId: callClientId(call) });
       }
@@ -249,49 +243,49 @@ function registerCallHandlers(socket) {
     }, RING_TIMEOUT_MS));
   });
 
-  socket.on('call:accept', (data) => {
-    const call = findCallRow(data);
+  socket.on('call:accept', async (data) => {
+    const call = await findCallRow(data);
     if (!call || !isCallParticipant(call, userId)) return;
     if (call.callee_id !== userId || call.status !== 'ringing') return;
     clearCallTimer(call.id);
-    db.prepare(`UPDATE calls SET status = 'active', answered_at = ? WHERE id = ?`).run(now(), call.id);
+    await db.prepare(`UPDATE calls SET status = 'active', answered_at = ? WHERE id = ?`).run(now(), call.id);
     registry.emitToUser(call.caller_id, 'call:accepted', { callId: call.id, clientId: callClientId(call) });
   });
 
-  socket.on('call:decline', (data) => {
-    const call = findCallRow(data);
+  socket.on('call:decline', async (data) => {
+    const call = await findCallRow(data);
     if (!call || !isCallParticipant(call, userId)) return;
     if (call.callee_id !== userId || call.status !== 'ringing') return;
     clearCallTimer(call.id);
-    db.prepare(`UPDATE calls SET status = 'declined', ended_at = ? WHERE id = ?`).run(now(), call.id);
+    await db.prepare(`UPDATE calls SET status = 'declined', ended_at = ? WHERE id = ?`).run(now(), call.id);
     registry.emitToUser(call.caller_id, 'call:declined', { callId: call.id, clientId: callClientId(call) });
   });
 
-  socket.on('call:cancel', (data) => {
-    const call = findCallRow(data);
+  socket.on('call:cancel', async (data) => {
+    const call = await findCallRow(data);
     if (!call || !isCallParticipant(call, userId)) return;
     if (call.caller_id !== userId || call.status !== 'ringing') return;
     clearCallTimer(call.id);
-    db.prepare(`UPDATE calls SET status = 'cancelled', ended_at = ? WHERE id = ?`).run(now(), call.id);
+    await db.prepare(`UPDATE calls SET status = 'cancelled', ended_at = ? WHERE id = ?`).run(now(), call.id);
     registry.emitToUser(call.callee_id, 'call:cancelled', { callId: call.id, clientId: callClientId(call) });
   });
 
-  socket.on('call:end', (data) => {
-    const call = findCallRow(data);
+  socket.on('call:end', async (data) => {
+    const call = await findCallRow(data);
     if (!call || !isCallParticipant(call, userId)) return;
     clearCallTimer(call.id);
     if (call.status === 'active') {
-      db.prepare(`UPDATE calls SET status = 'completed', ended_at = ? WHERE id = ?`).run(now(), call.id);
+      await db.prepare(`UPDATE calls SET status = 'completed', ended_at = ? WHERE id = ?`).run(now(), call.id);
     } else if (!call.ended_at) {
-      db.prepare(`UPDATE calls SET ended_at = ? WHERE id = ?`).run(now(), call.id);
+      await db.prepare(`UPDATE calls SET ended_at = ? WHERE id = ?`).run(now(), call.id);
     }
     const other = call.caller_id === userId ? call.callee_id : call.caller_id;
     registry.emitToUser(other, 'call:ended', { callId: call.id, clientId: callClientId(call), by: userId });
   });
 
   /* WebRTC signaling relay (offer / answer / ICE) */
-  socket.on('signal', (data) => {
-    const call = findCallRow(data);
+  socket.on('signal', async (data) => {
+    const call = await findCallRow(data);
     if (!call || !isCallParticipant(call, userId)) return;
     const to = Number(data && data.to);
     if (to !== call.caller_id && to !== call.callee_id) return;
@@ -299,11 +293,11 @@ function registerCallHandlers(socket) {
     registry.emitToUser(to, 'signal', { callId: call.id, clientId: callClientId(call), from: userId, data: data.data || null });
   });
 
-  socket.on('typing', (data) => {
+  socket.on('typing', async (data) => {
     const to = Number(data && data.to);
     const conversationId = Number(data && data.conversationId);
     if (!Number.isInteger(to) || to === userId || !Number.isInteger(conversationId)) return;
-    const conv = db.prepare(`SELECT * FROM conversations WHERE id = ?`).get(conversationId);
+    const conv = await db.prepare(`SELECT * FROM conversations WHERE id = ?`).get(conversationId);
     if (!conv) return;
     if (!(conv.user_a === userId && conv.user_b === to) && !(conv.user_a === to && conv.user_b === userId)) return;
     registry.emitToUser(to, 'typing', { conversationId, userId, at: now() });
@@ -320,27 +314,27 @@ function pushNotifyCall(calleeId, callerName) {
   });
 }
 
-io.on('connection', (socket) => {
+io.on('connection', async (socket) => {
   const userId = socket.data.userId;
   const wasOnline = registry.onlineSocketCount(userId) > 0;
 
   registry.attach(socket, userId);
 
   // Deliver anything that arrived while the user was offline.
-  markDeliveredFor(userId);
+  await markDeliveredFor(userId);
 
   if (!wasOnline) {
-    db.prepare(`UPDATE users SET last_seen = NULL WHERE id = ?`).run(userId);
+    await db.prepare(`UPDATE users SET last_seen = NULL WHERE id = ?`).run(userId);
     io.emit('presence', { userId, online: true, lastSeen: null });
   }
 
-  socket.on('disconnect', () => {
+  socket.on('disconnect', async () => {
     const uid = registry.detach(socket);
     if (uid === null) return;
     const stillOnline = registry.onlineSocketCount(uid) > 0;
     if (!stillOnline) {
       const lastSeen = now();
-      db.prepare(`UPDATE users SET last_seen = ? WHERE id = ?`).run(lastSeen, uid);
+      await db.prepare(`UPDATE users SET last_seen = ? WHERE id = ?`).run(lastSeen, uid);
       io.emit('presence', { userId: uid, online: false, lastSeen });
     }
   });
@@ -349,7 +343,25 @@ io.on('connection', (socket) => {
 });
 
 /* ---------------- boot ---------------- */
-server.listen(config.port, '0.0.0.0', () => {
-  console.log(`\n  ⚡ PulseChat server running`);
-  console.log(`  ➜ http://localhost:${config.port}  (env: ${config.env})\n`);
+const { init } = require('./db');
+
+async function boot() {
+  await init(); // connect to PostgreSQL (or open SQLite) + create tables
+
+  // Optional: start every boot from a blank database (testing only).
+  if (config.resetDbOnStart) {
+    await wipeAllData();
+    console.log('[dev] RESET_DB_ON_START — all data wiped at boot.');
+  }
+
+  server.listen(config.port, '0.0.0.0', () => {
+    console.log(`\n  ⚡ PulseChat server running`);
+    console.log(`  ➜ http://localhost:${config.port}  (env: ${config.env})`);
+    console.log(`  ➜ storage: ${process.env.DATABASE_URL ? 'PostgreSQL (permanent)' : 'SQLite (local)'}\n`);
+  });
+}
+
+boot().catch((err) => {
+  console.error('[boot] failed:', err);
+  process.exit(1);
 });

@@ -12,7 +12,7 @@ const path = require('path');
 const { db } = require('./db');
 const config = require('./config');
 
-function wipeAllData() {
+async function wipeAllData() {
   // FK order matters — children first.
   const tables = [
     'messages',
@@ -23,18 +23,16 @@ function wipeAllData() {
     'push_subscriptions',
     'calls',
     'media',
+    'posts',
+    'post_likes',
+    'post_comments',
     'users',
   ];
-  const tx = db.transaction(() => {
-    for (const t of tables) db.prepare(`DELETE FROM ${t}`).run();
-    // Reset auto-increment counters so ids start clean at 1.
-    try {
-      db.prepare(`DELETE FROM sqlite_sequence`).run();
-    } catch {
-      /* sqlite_sequence may not exist in some setups */
-    }
-  });
-  tx();
+  for (const t of tables) {
+    await db.prepare(`DELETE FROM ${t}`).run();
+  }
+  // Reset auto-increment counters so ids start clean at 1.
+  await db.resetSequences();
 
   // Remove uploaded files (avatars + message media).
   for (const dir of [config.avatarDir, config.messageDir]) {

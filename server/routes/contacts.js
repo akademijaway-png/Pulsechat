@@ -16,41 +16,41 @@ const push = require('../realtime/pushService');
 
 const router = express.Router();
 
-function userRow(id) {
-  return db.prepare(`SELECT * FROM users WHERE id = ?`).get(id);
+async function userRow(id) {
+  return await db.prepare(`SELECT * FROM users WHERE id = ?`).get(id);
 }
 
 /** List accepted contacts (friends), with live presence info. */
-router.get('/contacts', requireAuth, (req, res) => {
-  const rows = db
+router.get('/contacts', requireAuth, async (req, res) => {
+  const rows = await db
     .prepare(
       `SELECT u.* FROM contacts c JOIN users u ON u.id = c.contact_id
         WHERE c.user_id = ? AND c.status = 'accepted'
-        ORDER BY u.display_name COLLATE NOCASE ASC`
+        ORDER BY u.display_name ASC`
     )
     .all(req.user.id);
-  res.json({ contacts: rows.map((r) => userSummary(r, req.user.id)) });
+  res.json({ contacts: await Promise.all(rows.map(async (r) => userSummary(r, req.user.id))) });
 });
 
 /** Incoming + outgoing pending requests. */
-router.get('/contacts/requests', requireAuth, (req, res) => {
+router.get('/contacts/requests', requireAuth, async (req, res) => {
   const me = req.user.id;
-  const incoming = db
+  const incomingRows = await db
     .prepare(
       `SELECT u.* FROM contacts c JOIN users u ON u.id = c.user_id
         WHERE c.contact_id = ? AND c.status = 'requested'
         ORDER BY c.created_at DESC`
     )
-    .all(me)
-    .map((r) => userSummary(r, me));
-  const outgoing = db
+    .all(me);
+  const outgoingRows = await db
     .prepare(
       `SELECT u.* FROM contacts c JOIN users u ON u.id = c.contact_id
         WHERE c.user_id = ? AND c.status = 'requested'
         ORDER BY c.created_at DESC`
     )
-    .all(me)
-    .map((r) => userSummary(r, me));
+    .all(me);
+  const incoming = await Promise.all(incomingRows.map(async (r) => userSummary(r, me)));
+  const outgoing = await Promise.all(outgoingRows.map(async (r) => userSummary(r, me)));
   res.json({ incoming, outgoing });
 });
 
@@ -59,15 +59,15 @@ router.post(
   '/contacts/requests',
   requireAuth,
   validateBody({ toUserId: { type: 'integer', required: true, label: 'User id' } }),
-  (req, res) => {
+  async (req, res) => {
     const me = req.user.id;
     const target = req.valid.toUserId;
     if (target === me) throw errors.badRequest('You cannot send a request to yourself.');
 
-    const other = userRow(target);
+    const other = await userRow(target);
     if (!other) throw errors.notFound('This user does not exist.');
 
-    const existing = db
+    const existing = await db
       .prepare(
         `SELECT * FROM contacts WHERE (user_id = ? AND contact_id = ?) OR (user_id = ? AND contact_id = ?)`
       )
@@ -79,13 +79,13 @@ router.post(
       throw errors.conflict('This user has already sent you a request. Accept it instead.');
     }
 
-    db.prepare(`INSERT INTO contacts (user_id, contact_id, status, created_at) VALUES (?, ?, 'requested', ?)`).run(
+    await db.prepare(`INSERT INTO contacts (user_id, contact_id, status, created_at) VALUES (?, ?, 'requested', ?)`).run(
       me,
       target,
       now()
     );
 
-    const fromSummary = userSummary(db.prepare(`SELECT * FROM users WHERE id = ?`).get(me), target);
+    const fromSummary = await userSummary(await db.prepare(`SELECT * FROM users WHERE id = ?`).get(me), target);
     emitToUser(target, 'contact:request', { from: fromSummary });
     push.sendToUser(target, {
       title: 'New friend request',
@@ -94,33 +94,33 @@ router.post(
       url: '/people',
     });
 
-    res.status(201).json({ ok: true, from: userSummary(userRow(me), target) });
+    res.status(201).json({ ok: true, from: await userSummary(await userRow(me), target) });
   }
 );
 
 /** Accept an incoming request. */
-router.post('/contacts/requests/:fromUserId/accept', requireAuth, (req, res) => {
+router.post('/contacts/requests/:fromUserId/accept', requireAuth, async (req, res) => {
   const me = req.user.id;
   const fromId = Number(req.params.fromUserId);
-  const row = db
+  const row = await db
     .prepare(`SELECT * FROM contacts WHERE user_id = ? AND contact_id = ? AND status = 'requested'`)
     .get(fromId, me);
   if (!row) throw errors.notFound('No pending request from this user.');
 
-  db.prepare(`UPDATE contacts SET status = 'accepted', responded_at = ? WHERE id = ?`).run(now(), row.id);
+  await db.prepare(`UPDATE contacts SET status = 'accepted', responded_at = ? WHERE id = ?`).run(now(), row.id);
 
   // CRITICAL: persist the friendship in BOTH directions. The requester's row
   // is already accepted; the accepter needs their own row too, otherwise the
   // friendship disappears from the accepter's friends list after a restart.
-  const reverse = db
+  const reverse = await db
     .prepare(`SELECT id FROM contacts WHERE user_id = ? AND contact_id = ?`)
     .get(me, fromId);
   if (!reverse) {
-    db.prepare(`INSERT INTO contacts (user_id, contact_id, status, created_at, responded_at) VALUES (?, ?, 'accepted', ?, ?)`)
+    await db.prepare(`INSERT INTO contacts (user_id, contact_id, status, created_at, responded_at) VALUES (?, ?, 'accepted', ?, ?)`)
       .run(me, fromId, now(), now());
   }
 
-  const mySummary = userSummary(userRow(me), fromId);
+  const mySummary = await userSummary(await userRow(me), fromId);
   emitToUser(fromId, 'contact:accepted', { contact: mySummary });
   push.sendToUser(fromId, {
     title: 'Request accepted',
@@ -133,24 +133,24 @@ router.post('/contacts/requests/:fromUserId/accept', requireAuth, (req, res) => 
 });
 
 /** Decline an incoming request. */
-router.post('/contacts/requests/:fromUserId/decline', requireAuth, (req, res) => {
+router.post('/contacts/requests/:fromUserId/decline', requireAuth, async (req, res) => {
   const me = req.user.id;
   const fromId = Number(req.params.fromUserId);
-  const row = db
+  const row = await db
     .prepare(`SELECT * FROM contacts WHERE user_id = ? AND contact_id = ? AND status = 'requested'`)
     .get(fromId, me);
   if (!row) throw errors.notFound('No pending request from this user.');
 
-  db.prepare(`DELETE FROM contacts WHERE id = ?`).run(row.id);
+  await db.prepare(`DELETE FROM contacts WHERE id = ?`).run(row.id);
   emitToUser(fromId, 'contact:declined', { fromUserId: me });
   res.json({ ok: true });
 });
 
 /** Remove an existing contact (deletes both direction rows). */
-router.delete('/contacts/:userId', requireAuth, (req, res) => {
+router.delete('/contacts/:userId', requireAuth, async (req, res) => {
   const me = req.user.id;
   const otherId = Number(req.params.userId);
-  const row = db
+  const row = await db
     .prepare(
       `SELECT * FROM contacts
         WHERE (user_id = ? AND contact_id = ?) OR (user_id = ? AND contact_id = ?)`
@@ -159,7 +159,7 @@ router.delete('/contacts/:userId', requireAuth, (req, res) => {
   if (!row) throw errors.notFound('This user is not in your contacts.');
 
   // Delete BOTH direction rows so the removal is consistent for both users.
-  db.prepare(`DELETE FROM contacts WHERE (user_id = ? AND contact_id = ?) OR (user_id = ? AND contact_id = ?)`).run(
+  await db.prepare(`DELETE FROM contacts WHERE (user_id = ? AND contact_id = ?) OR (user_id = ? AND contact_id = ?)`).run(
     me, otherId, otherId, me
   );
   emitToUser(otherId, 'contact:removed', { userId: me });

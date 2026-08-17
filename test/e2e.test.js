@@ -130,7 +130,8 @@ async function main() {
   assert(true, 'Alice sees Bob go offline automatically');
 
   const searchOffline = await api('GET', `/users/search?q=bo`, { token: tokenA });
-  assert(searchOffline.json.users[0].online === false && searchOffline.json.users[0].lastSeen > 0, 'offline status + last seen');
+  const bobOff = searchOffline.json.users.find((u) => u.id === idB);
+  assert(bobOff && bobOff.online === false && bobOff.lastSeen > 0, 'offline status + last seen');
 
   const bobOnline2 = waitFor(sa, 'presence', (p) => p.userId === idB && p.online === true);
   const sb2 = await connect(tokenB);

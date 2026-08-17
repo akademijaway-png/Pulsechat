@@ -16,31 +16,31 @@ function escapeLike(s) {
   return s.replace(/[\\%_]/g, (m) => '\\' + m);
 }
 
-router.get('/search', requireAuth, (req, res) => {
+router.get('/search', requireAuth, async (req, res) => {
   const q = typeof req.query.q === 'string' ? req.query.q.trim() : '';
   if (!q) return res.json({ users: [] });
   if (q.length > 100) throw errors.badRequest('Search query is too long.');
 
   const like = '%' + escapeLike(q) + '%';
-  const rows = db
+  const rows = await db
     .prepare(
       `SELECT * FROM users
-        WHERE (display_name LIKE @like ESCAPE '\\' OR email LIKE @like ESCAPE '\\')
-          AND id != @me
-        ORDER BY display_name COLLATE NOCASE ASC
+        WHERE (LOWER(display_name) LIKE LOWER(?) OR LOWER(email) LIKE LOWER(?))
+          AND id != ?
+        ORDER BY display_name ASC
         LIMIT 40`
     )
-    .all({ like, me: req.user.id });
+    .all(like, like, req.user.id);
 
-  res.json({ users: rows.map((r) => userSummary(r, req.user.id)) });
+  res.json({ users: await Promise.all(rows.map(async (r) => userSummary(r, req.user.id))) });
 });
 
-router.get('/:id', requireAuth, (req, res) => {
+router.get('/:id', requireAuth, async (req, res) => {
   const id = Number(req.params.id);
   if (!Number.isInteger(id) || id <= 0) throw errors.badRequest('Invalid user id.');
-  const row = db.prepare(`SELECT * FROM users WHERE id = ?`).get(id);
+  const row = await db.prepare(`SELECT * FROM users WHERE id = ?`).get(id);
   if (!row) throw errors.notFound('This user does not exist.');
-  res.json({ user: userSummary(row, req.user.id) });
+  res.json({ user: await userSummary(row, req.user.id) });
 });
 
 module.exports = router;

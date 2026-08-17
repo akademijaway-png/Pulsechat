@@ -21,8 +21,8 @@ const router = express.Router();
 
 const MEDIA_FILE_RE = /^[a-f0-9-]{36}\.(jpg|png|webp|gif)$/;
 
-function getConvOr403(convId, userId) {
-  const conv = db.prepare(`SELECT * FROM conversations WHERE id = ?`).get(convId);
+async function getConvOr403(convId, userId) {
+  const conv = await db.prepare(`SELECT * FROM conversations WHERE id = ?`).get(convId);
   if (!conv) throw errors.notFound('Conversation not found.');
   if (conv.user_a !== userId && conv.user_b !== userId) {
     throw errors.forbidden('You do not have access to this conversation.');
@@ -32,11 +32,10 @@ function getConvOr403(convId, userId) {
 
 /* ---------------- conversation list ---------------- */
 
-router.get('/conversations', requireAuth, (req, res) => {
+router.get('/conversations', requireAuth, async (req, res) => {
   const me = req.user.id;
-  const rows = db.prepare(`SELECT * FROM conversations WHERE user_a = ? OR user_b = ?`).all(me, me);
-  const items = rows
-    .map((r) => conversationItem(r.id, me))
+  const rows = await db.prepare(`SELECT * FROM conversations WHERE user_a = ? OR user_b = ?`).all(me, me);
+  const items = (await Promise.all(rows.map(async (r) => conversationItem(r.id, me))))
     .filter(Boolean)
     .sort((a, b) => (b.lastMessage ? b.lastMessage.createdAt : 0) - (a.lastMessage ? a.lastMessage.createdAt : 0));
   res.json({ conversations: items });
@@ -48,52 +47,52 @@ router.post(
   '/conversations',
   requireAuth,
   validateBody({ userId: { type: 'integer', required: true, label: 'User id' } }),
-  (req, res) => {
+  async (req, res) => {
     const me = req.user.id;
     const other = req.valid.userId;
     if (other === me) throw errors.badRequest('You cannot chat with yourself.');
-    const otherRow = db.prepare(`SELECT * FROM users WHERE id = ?`).get(other);
+    const otherRow = await db.prepare(`SELECT * FROM users WHERE id = ?`).get(other);
     if (!otherRow) throw errors.notFound('This user does not exist.');
-    if (relationWith(me, other) !== 'accepted') {
+    if (await relationWith(me, other) !== 'accepted') {
       throw errors.forbidden('You can only start chats with your contacts.');
     }
     const a = Math.min(me, other);
     const b = Math.max(me, other);
-    let conv = db.prepare(`SELECT * FROM conversations WHERE user_a = ? AND user_b = ?`).get(a, b);
+    let conv = await db.prepare(`SELECT * FROM conversations WHERE user_a = ? AND user_b = ?`).get(a, b);
     if (!conv) {
-      const info = db
+      const info = await db
         .prepare(`INSERT INTO conversations (user_a, user_b, created_at) VALUES (?, ?, ?)`)
         .run(a, b, now());
-      conv = db.prepare(`SELECT * FROM conversations WHERE id = ?`).get(info.lastInsertRowid);
+      conv = await db.prepare(`SELECT * FROM conversations WHERE id = ?`).get(info.lastInsertRowid);
     }
-    res.status(201).json({ conversation: conversationItem(conv.id, me) });
+    res.status(201).json({ conversation: await conversationItem(conv.id, me) });
   }
 );
 
 /* ---------------- single conversation ---------------- */
 
-router.get('/conversations/:id', requireAuth, (req, res) => {
-  const conv = getConvOr403(Number(req.params.id), req.user.id);
-  res.json({ conversation: conversationItem(conv.id, req.user.id) });
+router.get('/conversations/:id', requireAuth, async (req, res) => {
+  const conv = await getConvOr403(Number(req.params.id), req.user.id);
+  res.json({ conversation: await conversationItem(conv.id, req.user.id) });
 });
 
 /* ---------------- message history (paginated) ---------------- */
 
-router.get('/conversations/:id/messages', requireAuth, (req, res) => {
-  const conv = getConvOr403(Number(req.params.id), req.user.id);
+router.get('/conversations/:id/messages', requireAuth, async (req, res) => {
+  const conv = await getConvOr403(Number(req.params.id), req.user.id);
   const before = Number.isInteger(Number(req.query.before)) ? Math.max(0, Number(req.query.before)) : 0;
   let limit = Number.isInteger(Number(req.query.limit)) ? Number(req.query.limit) : 50;
   limit = Math.min(Math.max(limit, 1), 100);
 
   const rows = before
-    ? db
+    ? await db
         .prepare(`SELECT * FROM messages WHERE conversation_id = ? AND id < ? ORDER BY id DESC LIMIT ?`)
         .all(conv.id, before, limit)
-    : db.prepare(`SELECT * FROM messages WHERE conversation_id = ? ORDER BY id DESC LIMIT ?`).all(conv.id, limit);
+    : await db.prepare(`SELECT * FROM messages WHERE conversation_id = ? ORDER BY id DESC LIMIT ?`).all(conv.id, limit);
 
   rows.reverse();
   const hasMore = rows.length > 0
-    ? !!db.prepare(`SELECT 1 FROM messages WHERE conversation_id = ? AND id < ? LIMIT 1`).get(conv.id, rows[0].id)
+    ? !!await db.prepare(`SELECT 1 FROM messages WHERE conversation_id = ? AND id < ? LIMIT 1`).get(conv.id, rows[0].id)
     : false;
 
   res.json({ messages: rows.map(messageShape), hasMore });
@@ -108,13 +107,13 @@ router.post(
     kind: { type: 'string', required: true, label: 'Message kind', max: 10 },
     body: { type: 'string', required: true, label: 'Message', max: config.messageMaxLength + 100 },
   }),
-  (req, res) => {
+  async (req, res) => {
     const me = req.user.id;
-    const conv = getConvOr403(Number(req.params.id), me);
+    const conv = await getConvOr403(Number(req.params.id), me);
     const other = otherParty(conv, me);
     const { kind, body } = req.valid;
 
-    if (relationWith(me, other) !== 'accepted') {
+    if (await relationWith(me, other) !== 'accepted') {
       throw errors.forbidden('You can only message your contacts.');
     }
 
@@ -126,7 +125,7 @@ router.post(
       }
     } else if (kind === 'image') {
       if (!MEDIA_FILE_RE.test(finalBody)) throw errors.badRequest('Invalid image reference.');
-      const media = db
+      const media = await db
         .prepare(`SELECT * FROM media WHERE filename = ? AND kind = 'message' AND owner_id = ? AND conversation_id = ?`)
         .get(finalBody, me, conv.id);
       if (!media) throw errors.badRequest('Image not found or not uploaded for this conversation.');
@@ -137,21 +136,21 @@ router.post(
     const t = now();
     const online = isOnline(other);
 
-    const info = db
+    const info = await db
       .prepare(`INSERT INTO messages (conversation_id, sender_id, kind, body, created_at, delivered_at) VALUES (?, ?, ?, ?, ?, ?)`)
       .run(conv.id, me, kind, finalBody, t, online ? t : null);
-    db.prepare(`UPDATE conversations SET last_message_id = ? WHERE id = ?`).run(info.lastInsertRowid, conv.id);
+    await db.prepare(`UPDATE conversations SET last_message_id = ? WHERE id = ?`).run(info.lastInsertRowid, conv.id);
 
-    const msgRow = db.prepare(`SELECT * FROM messages WHERE id = ?`).get(info.lastInsertRowid);
+    const msgRow = await db.prepare(`SELECT * FROM messages WHERE id = ?`).get(info.lastInsertRowid);
     const message = messageShape(msgRow);
 
     if (online) {
       emitToUser(other, 'message:new', {
-        conversation: conversationItem(conv.id, other),
+        conversation: await conversationItem(conv.id, other),
         message,
       });
     } else {
-      const meRow = db.prepare(`SELECT * FROM users WHERE id = ?`).get(me);
+      const meRow = await db.prepare(`SELECT * FROM users WHERE id = ?`).get(me);
       push.sendToUser(other, {
         title: `New message from ${meRow.display_name}`,
         body: kind === 'image' ? '📷 Photo' : 'New message',
@@ -166,18 +165,19 @@ router.post(
 
 /* ---------------- mark as read ---------------- */
 
-router.post('/conversations/:id/read', requireAuth, (req, res) => {
+router.post('/conversations/:id/read', requireAuth, async (req, res) => {
   const me = req.user.id;
-  const conv = getConvOr403(Number(req.params.id), me);
+  const conv = await getConvOr403(Number(req.params.id), me);
   const other = otherParty(conv, me);
   const t = now();
-  const result = db
+  const result = await db
     .prepare(`UPDATE messages SET read_at = ? WHERE conversation_id = ? AND sender_id = ? AND read_at IS NULL`)
     .run(t, conv.id, other);
   if (result.changes > 0) {
-    const maxId = db
+    const maxRow = await db
       .prepare(`SELECT MAX(id) AS m FROM messages WHERE conversation_id = ? AND sender_id = ? AND read_at = ?`)
-      .get(conv.id, other, t).m;
+      .get(conv.id, other, t);
+    const maxId = maxRow ? maxRow.m : null;
     emitToUser(other, 'message:read', { conversationId: conv.id, byUserId: me, upToMessageId: maxId, at: t });
   }
   res.json({ ok: true });

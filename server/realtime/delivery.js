@@ -12,8 +12,8 @@ const { db, now } = require('../db');
 const { emitToUser } = require('./registry');
 const { messageShape, conversationItem } = require('../helpers');
 
-function markDeliveredFor(userId) {
-  const rows = db
+async function markDeliveredFor(userId) {
+  const rows = await db
     .prepare(
       `SELECT m.*
          FROM messages m
@@ -33,7 +33,7 @@ function markDeliveredFor(userId) {
   }
 
   const t = now();
-  const upd = db.prepare(`UPDATE messages SET delivered_at = ? WHERE id = ? AND delivered_at IS NULL`);
+  const upd = await db.prepare(`UPDATE messages SET delivered_at = ? WHERE id = ? AND delivered_at IS NULL`);
 
   for (const [senderId, msgs] of bySender) {
     const perConv = new Map();
@@ -54,7 +54,7 @@ function markDeliveredFor(userId) {
     // Replay the messages to the reconnecting user (they are the recipient).
     for (const m of msgs) {
       emitToUser(userId, 'message:new', {
-        conversation: conversationItem(m.conversation_id, userId),
+        conversation: await conversationItem(m.conversation_id, userId),
         message: messageShape(m),
       });
     }

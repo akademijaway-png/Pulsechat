@@ -7,16 +7,16 @@ const { db } = require('./db');
 const { isOnline } = require('./realtime/registry');
 
 /** Relation between me and another user, based on the contacts table. */
-function relationWith(meId, otherId) {
+async function relationWith(meId, otherId) {
   if (meId === otherId) return 'self';
-  const out = db.prepare(`SELECT status FROM contacts WHERE user_id = ? AND contact_id = ?`).get(meId, otherId);
+  const out = await db.prepare(`SELECT status FROM contacts WHERE user_id = ? AND contact_id = ?`).get(meId, otherId);
   if (out) return out.status === 'accepted' ? 'accepted' : 'requested';
-  const inc = db.prepare(`SELECT status FROM contacts WHERE user_id = ? AND contact_id = ?`).get(otherId, meId);
+  const inc = await db.prepare(`SELECT status FROM contacts WHERE user_id = ? AND contact_id = ?`).get(otherId, meId);
   if (inc) return inc.status === 'accepted' ? 'accepted' : 'incoming';
   return 'none';
 }
 
-function userSummary(row, meId) {
+async function userSummary(row, meId) {
   return {
     id: row.id,
     displayName: row.display_name,
@@ -24,8 +24,8 @@ function userSummary(row, meId) {
     bio: row.bio || '',
     avatar: row.avatar || null,
     online: isOnline(row.id),
-    lastSeen: row.last_seen || null,
-    relation: relationWith(meId, row.id),
+    lastSeen: row.last_seen == null ? null : Number(row.last_seen),
+    relation: await relationWith(meId, row.id),
   };
 }
 
@@ -41,9 +41,9 @@ function messageShape(m) {
     senderId: m.sender_id,
     kind: m.kind,
     body: m.body,
-    createdAt: m.created_at,
-    deliveredAt: m.delivered_at,
-    readAt: m.read_at,
+    createdAt: Number(m.created_at),
+    deliveredAt: m.delivered_at == null ? null : Number(m.delivered_at),
+    readAt: m.read_at == null ? null : Number(m.read_at),
   };
 }
 
@@ -51,21 +51,22 @@ function messageShape(m) {
  * Full conversation item (same shape used by the conversation list).
  * Computed from the perspective of `meId`.
  */
-function conversationItem(convId, meId) {
-  const c = db.prepare(`SELECT * FROM conversations WHERE id = ?`).get(convId);
+async function conversationItem(convId, meId) {
+  const c = await db.prepare(`SELECT * FROM conversations WHERE id = ?`).get(convId);
   if (!c) return null;
   const otherId = otherParty(c, meId);
-  const other = db.prepare(`SELECT * FROM users WHERE id = ?`).get(otherId);
+  const other = await db.prepare(`SELECT * FROM users WHERE id = ?`).get(otherId);
   if (!other) return null;
   const last = c.last_message_id
-    ? db.prepare(`SELECT * FROM messages WHERE id = ?`).get(c.last_message_id)
+    ? await db.prepare(`SELECT * FROM messages WHERE id = ?`).get(c.last_message_id)
     : null;
-  const unread = db
+  const unreadRow = await db
     .prepare(
       `SELECT COUNT(*) AS n FROM messages
         WHERE conversation_id = ? AND sender_id != ? AND read_at IS NULL`
     )
-    .get(convId, meId).n;
+    .get(convId, meId);
+  const unread = unreadRow ? unreadRow.n : 0;
   return {
     id: c.id,
     user: userSummary(other, meId),

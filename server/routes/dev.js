@@ -12,7 +12,7 @@ const { errors } = require('../middleware/validate');
 
 const router = express.Router();
 
-router.post('/reset', (req, res) => {
+router.post('/reset', async (req, res) => {
   if (!config.allowReset) {
     throw errors.forbidden('Data reset is disabled on this server.');
   }
