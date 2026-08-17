@@ -30,9 +30,9 @@ router.get('/calls', requireAuth, async (req, res) => {
       status: c.status,
       direction: c.caller_id === me ? 'outgoing' : 'incoming',
       other: await userSummary(other, me),
-      initiatedAt: c.initiated_at,
-      answeredAt: c.answered_at,
-      endedAt: c.ended_at,
+      initiatedAt: Number(c.initiated_at),
+      answeredAt: c.answered_at == null ? null : Number(c.answered_at),
+      endedAt: c.ended_at == null ? null : Number(c.ended_at),
       duration: c.answered_at && c.ended_at ? Math.max(0, c.ended_at - c.answered_at) : null,
     };
   }));

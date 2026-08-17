@@ -125,7 +125,7 @@ function publicUser(row) {
     email: row.email,
     bio: row.bio || '',
     avatar: row.avatar || null,
-    createdAt: row.created_at,
+    createdAt: Number(row.created_at),
   };
 }
 

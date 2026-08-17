@@ -34,7 +34,7 @@ async function postShape(row, meId) {
         id: c.id,
         author: await userSummary(ca, meId),
         body: c.body,
-        createdAt: c.created_at,
+        createdAt: Number(c.created_at),
       };
     })
   );
@@ -43,7 +43,7 @@ async function postShape(row, meId) {
     author: await userSummary(author, meId),
     body: row.body,
     image: row.image || null,
-    createdAt: row.created_at,
+    createdAt: Number(row.created_at),
     likes,
     liked: !!liked,
     comments,
@@ -133,7 +133,7 @@ router.post(
     const c = await db.prepare(`SELECT * FROM post_comments WHERE id = ?`).get(info.lastInsertRowid);
     const ca = await db.prepare(`SELECT * FROM users WHERE id = ?`).get(c.author_id);
     res.status(201).json({
-      comment: { id: c.id, author: await userSummary(ca, req.user.id), body: c.body, createdAt: c.created_at },
+      comment: { id: c.id, author: await userSummary(ca, req.user.id), body: c.body, createdAt: Number(c.created_at) },
     });
   }
 );

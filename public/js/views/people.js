@@ -17,7 +17,7 @@ export function render(host) {
 }
 
 export function refresh() {
-  return Promise.all([loadRequests(), loadContacts()]);
+  return Promise.all([loadRequests(), loadContacts(), loadDiscover()]);
 }
 
 export function refreshIfActive() {
@@ -54,9 +54,30 @@ function build() {
   return el('div', { class: 'fade-swap' }, [
     searchBar(),
     el('div', { id: 'search-results' }),
+    el('div', { id: 'discover-section' }),
     requestsSection(),
     contactsSection(),
   ]);
+}
+
+/* Show registered users (recent) so people can find & add each other easily. */
+async function loadDiscover() {
+  const box = container.querySelector('#discover-section');
+  if (!box) return;
+  try {
+    const data = await api.get('/users/discover');
+    const others = data.users.filter((u) => u.relation !== 'accepted' && u.relation !== 'self');
+    if (!others.length) {
+      box.replaceChildren();
+      return;
+    }
+    box.replaceChildren(
+      el('div', { class: 'section-title', text: 'Registered on PulseChat' }),
+      ...others.slice(0, 8).map(userRow)
+    );
+  } catch {
+    box.replaceChildren();
+  }
 }
 
 function searchBar() {
@@ -76,10 +97,13 @@ function searchBar() {
 async function runSearch(q) {
   const resultsBox = container.querySelector('#search-results');
   const query = q.trim();
+  const discover = container.querySelector('#discover-section');
   if (query.length < 2) {
     resultsBox.replaceChildren();
+    if (discover) discover.style.display = '';
     return;
   }
+  if (discover) discover.style.display = 'none';
   lastQuery = query;
   resultsBox.replaceChildren(el('div', { class: 'skeleton', style: 'height:64px;margin:8px 0' }));
   try {

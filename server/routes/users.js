@@ -35,6 +35,15 @@ router.get('/search', requireAuth, async (req, res) => {
   res.json({ users: await Promise.all(rows.map(async (r) => userSummary(r, req.user.id))) });
 });
 
+/** Recent registered users — shows who's already on PulseChat so people can
+ *  find and add each other without knowing an exact name/email. */
+router.get('/discover', requireAuth, async (req, res) => {
+  const rows = await db
+    .prepare(`SELECT * FROM users WHERE id != ? ORDER BY id DESC LIMIT 30`)
+    .all(req.user.id);
+  res.json({ users: await Promise.all(rows.map(async (r) => userSummary(r, req.user.id))) });
+});
+
 router.get('/:id', requireAuth, async (req, res) => {
   const id = Number(req.params.id);
   if (!Number.isInteger(id) || id <= 0) throw errors.badRequest('Invalid user id.');
